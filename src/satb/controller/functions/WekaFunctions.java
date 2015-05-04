@@ -1,0 +1,68 @@
+package satb.controller.functions;
+
+import javafx.collections.ObservableList;
+import satb.model.Coordinate;
+import weka.core.Attribute;
+import weka.core.FastVector;
+import weka.core.Instance;
+import weka.core.Instances;
+
+/**Classe com métodos para manipulação e criação de Weka.
+* @author Marcel Tolentino Pinheiro de Oliveira
+*/
+public class WekaFunctions 
+{
+    private String path = "C:/Users/Marcel/Documents/NetBeansProjects/Mestrado/arff/";
+    private Instances instances;
+
+    /**Construtor. */
+    public WekaFunctions(){}
+ 
+    /**Retorna o valor da variavel instances.
+     @return o atributo instances.*/
+    public Instances getInstances()
+    {
+        return instances;
+    }
+    
+ 
+    //Cria um objeto no formato ARFF  
+    public Instances arff(ObservableList<Coordinate> list) throws Exception 
+    {
+        FastVector            atts;
+        Instances			data;
+        double[]			vals;
+
+        // 1. Definir os atributos
+        atts = new FastVector();
+        // - numérico
+        atts.addElement(new Attribute("longitude"));
+        // - numérico
+        atts.addElement(new Attribute("latitude"));
+
+        // 2. Criar o objeto Instances
+        data = new Instances("AnimalPosition", atts, 0);
+     
+        // 3. Preencher com dados
+        for(Coordinate point : list)
+        {
+            vals = new double[data.numAttributes()];
+                     
+            // - numérico
+            vals[0] = point.getLongitudeX();
+            
+            // - numérico
+            vals[1] = point.getLatitudeY();
+                
+            // Adicionar atributos no ARFF
+            data.add(new Instance(1.0, vals)); 
+        }
+       
+        System.out.println(data);
+        System.out.println("\n");
+        instances = data;
+        
+        //Retorna o arquivo ARFF pronto
+        return data;
+    }
+}

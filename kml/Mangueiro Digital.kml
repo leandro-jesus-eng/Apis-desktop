@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.2">
+  <Document>
+    <name>Mangueiro Digital</name>
+    <Style id="default">
+      <LineStyle>
+        <color>ff00ffff</color>
+        <width>1.5</width>
+      </LineStyle>
+      <IconStyle>
+        <color>ff00ffff</color>
+        <scale>0.8</scale>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0.6</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="polygon">
+      <LineStyle>
+        <color>ff00ffff</color>
+      </LineStyle>
+      <PolyStyle>
+        <color>7fffffff</color>
+      </PolyStyle>
+    </Style>
+    <StyleMap id="msn_ylw-pushpin2">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#polygon</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#polygon</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Placemark>
+      <name>Área</name>
+      <styleUrl>#msn_ylw-pushpin2</styleUrl>
+      <Polygon>
+        <extrude>1</extrude>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>-54.7240306968837,-20.443957813812,0 -54.7227924450442,-20.4427089381523,0 -54.7227244141028,-20.4428275214557,0 -54.7227476624494,-20.4439954732498,0 -54.7240306968837,-20.443957813812,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

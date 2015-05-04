@@ -1,0 +1,62 @@
+/* 
+    Document   : Results
+    Created on : 09/02/2013, 15:22:30
+    Author     : Marcel
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+.root 
+{ 
+    -fx-background-image: url("result_background.jpg");
+}
+
+.label
+{
+   -fx-font-size: 12 px;
+   -fx-font-weight: bold;
+   -fx-font-family: "Arial";
+}
+
+#label-title
+{
+   -fx-font-size: 14 px;
+   -fx-font-family: "Arial Black";
+}
+
+#cancelbutton 
+{
+    -fx-background-color: linear-gradient(#ff0000, #990000);
+    -fx-font-family: "Arial Narrow";
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+#cancelbutton:hover 
+{
+  -fx-background-color: linear-gradient(#990000, #ff0000);
+}
+
+#cancelbutton:focused 
+{
+    -fx-background-color: -fx-focus-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
+}
+
+
+#yellowbutton 
+{
+    -fx-background-color: linear-gradient(#ffff00, #b3b300);
+    -fx-font-family: "Arial Narrow";
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+#yellowbutton:hover 
+{
+  -fx-background-color: linear-gradient(#b3b300, #ffff00);
+}
+
+#yellowbutton:focused 
+{
+    -fx-background-color: -fx-focus-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
+}
