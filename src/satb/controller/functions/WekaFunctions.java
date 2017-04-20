@@ -1,6 +1,8 @@
 package satb.controller.functions;
 
+import java.io.File;
 import javafx.collections.ObservableList;
+import satb.Util;
 import satb.model.Coordinate;
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -12,7 +14,7 @@ import weka.core.Instances;
 */
 public class WekaFunctions 
 {
-    private String path = "C:/Users/Marcel/Documents/NetBeansProjects/Mestrado/arff/";
+    private String path = Util.getCurrentRelativePath() + File.separator + "arff" + File.separator;
     private Instances instances;
 
     /**Construtor. */

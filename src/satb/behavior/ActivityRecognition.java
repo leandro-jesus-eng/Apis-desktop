@@ -13,6 +13,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import satb.model.CoordinateVenus;
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -23,7 +25,7 @@ import weka.core.Instances;
  *
  * @author Leandro
  */
-public class ActivityRecognition {
+public class ActivityRecognition implements Runnable {
     
     public static boolean DEBUG = false;
     
@@ -38,10 +40,11 @@ public class ActivityRecognition {
     private LinkedList<CoordinateVenus> listCoordinate;
     private LinkedList<Observation> listObservations;
     
+    LinkedList<MovementDataStructure> listMDS = null;
     
     Integer degreesForSameDirection = 40;
-    Integer historyLength = 4;
-    Double minSpeed = 0.3;
+    Integer historyLength = 9;
+    Double minSpeed = 0.2;
     Double likelihoodNonmovingUnder = 0.1;
     Double likelihoodNonmovingOver = 0.6;
     
@@ -51,77 +54,129 @@ public class ActivityRecognition {
     
     String filenameARFF = "CowActivity.arff";
     
+    static Double maxCorrectAll = 0.0;
+    
+    volatile static Integer countActivityRecognitionRunnable = 0;
+    
+    LinkedList<String> observationsTypes = new LinkedList<>();
+    
     public ActivityRecognition(LinkedList<CoordinateVenus> listCoordinate, LinkedList<Observation> listObservations) throws Exception {
         this.listCoordinate = listCoordinate;
         this.listObservations = listObservations;
         
-        Double maxCorrectAll = 0.0;
-        Double minSpeedTemp = 0.0;
+        String configurationPrint = "minSpeed \t\t="+ this.minSpeed +"\n";
+            configurationPrint += "degreesForSameDirection \t\t="+this.degreesForSameDirection +"\n";
+            configurationPrint += "historyLength \t\t="+this.historyLength +"\n";
+            configurationPrint += "segmentSeconds \t\t="+this.segmentSeconds +"\n";
+
+        LinkedList<MovementDataStructure> listMDS = doMovementAnalyzer( listCoordinate );        
+        LinkedList<SegmentDataStructure> listSDS = doSegmentAnalyzer( listMDS );        
+        LinkedList<ActivityDataStructure> listADS = doActivityAnalyzer( listSDS );        
+        WekaTest wt = new WekaTest();
+        Instances data = createARFFData(listADS);
+        createARFF(data, filenameARFF);        // cria o arquivo se precisar
+        wt.go2(data, configurationPrint);
+    }
+    
+    
+    public ActivityRecognition(LinkedList<CoordinateVenus> listCoordinate, LinkedList<Observation> listObservations,
+        Integer degreesForSameDirectionA, Integer degreesForSameDirectionB, 
+        Integer historyLengthA, Integer historyLengthB,
+        Double minSpeedA, Double minSpeedB,
+        Double segmentSecondsA, Double segmentSecondsB) {
+        
+        this.listCoordinate = listCoordinate;
+        this.listObservations = listObservations;
+        
+        maxCorrectAll = 0.0;
+        countActivityRecognitionRunnable = 0;
+        /*Double minSpeedTemp = 0.0;
         Integer degreesForSameDirectionTemp = 0;
         Integer historyLengthTemp = 0;
-        Double segmentSecondsTemp = 0.0;
+        Double segmentSecondsTemp = 0.0;*/
+        Integer countRunnable = 0;
         
-        if(true) {               
-            for( minSpeed = 0.1; minSpeed <=0.5 ; minSpeed += 0.1) {
-                for( historyLength = 1;  historyLength <= 10; historyLength +=1) {
-                    for(degreesForSameDirection = 10; degreesForSameDirection<=50; degreesForSameDirection +=10 ) {// heading threshold
+        for( this.minSpeed = minSpeedA; this.minSpeed <=minSpeedB ; this.minSpeed += 0.1) {
+            for( this.historyLength = historyLengthA;  this.historyLength <= historyLengthB; this.historyLength +=1) {
+                for( this.degreesForSameDirection = degreesForSameDirectionA; this.degreesForSameDirection<=degreesForSameDirectionB; this.degreesForSameDirection +=10 ) {// heading threshold
 
-                        LinkedList<MovementDataStructure> listMDS = doMovementAnalyzer( listCoordinate );
+                    LinkedList<MovementDataStructure> listMDS = doMovementAnalyzer( listCoordinate );
+
+                    for(this.segmentSeconds = segmentSecondsA; this.segmentSeconds <= segmentSecondsB; this.segmentSeconds +=10 ) {
+
+                       /* System.out.println("minSpeed \t\t="+ this.minSpeed);
+                        System.out.println("degreesForSameDirection \t\t="+this.degreesForSameDirection);
+                        System.out.println("historyLength \t\t="+this.historyLength);
+                        System.out.println("segmentSeconds \t\t="+this.segmentSeconds);*/
                         
-                        for(segmentSeconds = 30.0; segmentSeconds <= 180; segmentSeconds +=10 ) {
-                            
-                            System.out.println("minSpeed \t\t="+ minSpeed);
-                            System.out.println("degreesForSameDirection \t\t="+degreesForSameDirection);
-                            System.out.println("historyLength \t\t="+historyLength);
-                            System.out.println("segmentSeconds \t\t="+segmentSeconds);                            
-                                                                
-                            LinkedList<SegmentDataStructure> listSDS = doSegmentAnalyzer( listMDS );        
-                            LinkedList<ActivityDataStructure> listADS = doActivityAnalyzer( listSDS );        
-                            createARFF(listADS, filenameARFF);        
-                            WekaTest wt = new WekaTest();
-                            Double maxCorrect = wt.go2(filenameARFF);  
-                            //System.out.println("maxCorrect \t\t="+maxCorrect);
-                            if(maxCorrect > maxCorrectAll) {
-                                maxCorrectAll = maxCorrect;
-                                minSpeedTemp = minSpeed;
-                                degreesForSameDirectionTemp = degreesForSameDirection;
-                                historyLengthTemp = historyLength;
-                                segmentSecondsTemp = segmentSeconds;
-                                
-                                System.out.println("maxCorrect \t\t="+ maxCorrectAll);
-                                System.out.println("minSpeed \t\t="+ minSpeedTemp);
-                                System.out.println("degreesForSameDirection \t\t="+degreesForSameDirectionTemp);
-                                System.out.println("historyLength \t\t="+historyLengthTemp);
-                                System.out.println("segmentSeconds \t\t="+segmentSecondsTemp);  
-                            }
-                            //for(sincCoordinateObservationSeconds = -3; sincCoordinateObservationSeconds <=3; sincCoordinateObservationSeconds +=1) {                               
-                            //}
-                        }
+                        while(countActivityRecognitionRunnable > 6);
+                        
+                        countActivityRecognitionRunnable ++;
+                        ActivityRecognition ar = new ActivityRecognition(listCoordinate, listObservations, listMDS, 
+                                this.degreesForSameDirection, this.historyLength, this.minSpeed, this.segmentSeconds);
+                        Thread t = new Thread (ar);
+                        t.setName(t.getName()+"-ActivityRecognition-"+ (countRunnable++) + "-"+countActivityRecognitionRunnable);
+                        t.start();                        
                     }
                 }
             }
+        }
+        
+        // espera todas as threads
+        while(countActivityRecognitionRunnable > 0);
+        
+        System.out.println("====================================================================================");
+        System.out.println("====================================================================================");
+        System.out.println("maxCorrect \t\t="+ maxCorrectAll);
+        /*System.out.println("minSpeed \t\t="+ minSpeedTemp);
+        System.out.println("degreesForSameDirection \t\t="+degreesForSameDirectionTemp);
+        System.out.println("historyLength \t\t="+historyLengthTemp);
+        System.out.println("segmentSeconds \t\t="+segmentSecondsTemp);             */
+    }
+    
+    
+    public ActivityRecognition(LinkedList<CoordinateVenus> listCoordinate, LinkedList<Observation> listObservations, LinkedList<MovementDataStructure> listMDS,
+        Integer degreesForSameDirection, Integer historyLength, Double minSpeed, Double segmentSeconds ) {
+        
+        this.listCoordinate = listCoordinate;
+        this.listObservations = listObservations;
+        
+        this.degreesForSameDirection = degreesForSameDirection;
+        this.historyLength = historyLength;
+        this.minSpeed = minSpeed;
+        this.segmentSeconds = segmentSeconds;
+        
+        this.listMDS = listMDS;
+    }    
+    
+    @Override
+    public void run() {
+        
+        String configurationPrint = "minSpeed \t\t="+ this.minSpeed +"\n";
+            configurationPrint += "degreesForSameDirection \t\t="+this.degreesForSameDirection +"\n";
+            configurationPrint += "historyLength \t\t="+this.historyLength +"\n";
+            configurationPrint += "segmentSeconds \t\t="+this.segmentSeconds +"\n";
+
+        if(this.listMDS == null) {
+            this.listMDS = doMovementAnalyzer( listCoordinate );        
+        }
+        LinkedList<SegmentDataStructure> listSDS = doSegmentAnalyzer( this.listMDS );        
+        LinkedList<ActivityDataStructure> listADS = doActivityAnalyzer( listSDS );       
+        
+        WekaTest wt = new WekaTest();
+        Instances data = createARFFData(listADS);        
+        try {
             
-            System.out.println("====================================================================================");
-            System.out.println("====================================================================================");
-            System.out.println("maxCorrect \t\t="+ maxCorrectAll);
-            System.out.println("minSpeed \t\t="+ minSpeedTemp);
-            System.out.println("degreesForSameDirection \t\t="+degreesForSameDirectionTemp);
-            System.out.println("historyLength \t\t="+historyLengthTemp);
-            System.out.println("segmentSeconds \t\t="+segmentSecondsTemp);             
-                            
-        } else {   
+            Double maxCorrect = wt.go2(data, configurationPrint);
+            countActivityRecognitionRunnable--;
+            if(maxCorrect > maxCorrectAll) {
+                maxCorrectAll = maxCorrect; 
+            }
             
-            System.out.println("minSpeed \t\t="+ minSpeed);
-            System.out.println("degreesForSameDirection \t\t="+degreesForSameDirection);
-            System.out.println("historyLength \t\t="+historyLength);
-            System.out.println("segmentSeconds \t\t="+segmentSeconds);                            
+        } catch (Exception ex) {
+            Logger.getLogger(ActivityRecognition.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
             
-            LinkedList<MovementDataStructure> listMDS = doMovementAnalyzer( listCoordinate );        
-            LinkedList<SegmentDataStructure> listSDS = doSegmentAnalyzer( listMDS );        
-            LinkedList<ActivityDataStructure> listADS = doActivityAnalyzer( listSDS );        
-            createARFF(listADS, filenameARFF);        
-            WekaTest wt = new WekaTest();
-            wt.go2(filenameARFF);
         }
     }
     
@@ -149,7 +204,7 @@ public class ActivityRecognition {
                     // nao é necessário porque o GPS dá a velocidade, mas, vamos testar a diferença
                     Double distancia = atual.distance(anterior);
                     mds.setMagnitude(distancia);                    
-                    Double differenceSeconds = (anterior.getDate().getTime() - atual.getDate().getTime()) / 1000.0;
+                    Double differenceSeconds = (anterior.getDateObject().getTime() - atual.getDateObject().getTime()) / 1000.0;
                     //mds.setSpeed(distancia/differenceSeconds);
                     
                     // calculo da aceleracao =  delta V / delta t
@@ -242,7 +297,7 @@ public class ActivityRecognition {
             while (listIterator.hasNext()) {
                 MovementDataStructure atual = listIterator.next();                
                 
-                tempoAcumulado += (atual.getCoordinatePoint().getDate().getTime() - anterior.getCoordinatePoint().getDate().getTime()) / 1000.0;
+                tempoAcumulado += (atual.getCoordinatePoint().getDateObject().getTime() - anterior.getCoordinatePoint().getDateObject().getTime()) / 1000.0;
                 if(tempoAcumulado > segmentSeconds) {
                     
                     SegmentDataStructure sds = new SegmentDataStructure(listMDSSegment);
@@ -365,9 +420,9 @@ public class ActivityRecognition {
                     
                     if(anteriorMDS != null) {
                         if(mds.getMovimentType().equals(NON_MOVING)) {
-                            accumulatedTimeNonMoving += (mds.getCoordinatePoint().getDate().getTime() - anteriorMDS.getCoordinatePoint().getDate().getTime());
+                            accumulatedTimeNonMoving += (mds.getCoordinatePoint().getDateObject().getTime() - anteriorMDS.getCoordinatePoint().getDateObject().getTime());
                         } else {
-                            accumulatedTimeMoving += (mds.getCoordinatePoint().getDate().getTime() - anteriorMDS.getCoordinatePoint().getDate().getTime());
+                            accumulatedTimeMoving += (mds.getCoordinatePoint().getDateObject().getTime() - anteriorMDS.getCoordinatePoint().getDateObject().getTime());
                         }
                     } 
                     
@@ -660,8 +715,8 @@ public class ActivityRecognition {
         LinkedList<ActivityDataStructure> listADS = new LinkedList<>();
         
         for(SegmentDataStructure sds : listSDS) {
-            Long begin = sds.getListMDS().getFirst().getCoordinatePoint().getDate().getTime() + sincCoordinateObservationSeconds*1000;
-            Long end = sds.getListMDS().getLast().getCoordinatePoint().getDate().getTime() + sincCoordinateObservationSeconds*1000;
+            Long begin = sds.getListMDS().getFirst().getCoordinatePoint().getDateObject().getTime() + sincCoordinateObservationSeconds*1000;
+            Long end = sds.getListMDS().getLast().getCoordinatePoint().getDateObject().getTime() + sincCoordinateObservationSeconds*1000;
             if(DEBUG) {
             System.out.println(sds.getListMDS().getFirst().getCoordinatePoint().getDate());
             System.out.println(sds.getListMDS().getLast().getCoordinatePoint().getDate());
@@ -673,6 +728,12 @@ public class ActivityRecognition {
             
             //if(observation != null) {
             if(ot != null) {
+                
+                // cria lista com os tipos de observações
+                if ( ! observationsTypes.contains(ot.observation.getObservation()) ) {
+                    observationsTypes.add(ot.observation.getObservation());
+                }
+                
                 ActivityDataStructure adsTemp = new ActivityDataStructure(sds, ot.observation.getObservation());
                 adsTemp.setTimeObservation(ot.observation.getTime());                
                 listADS.add(adsTemp);
@@ -685,8 +746,8 @@ public class ActivityRecognition {
 
             Map<String, Long> mapObservationsIntersec = new HashMap();        
             for(ActivityDataStructure ads : listADS) {
-                Long begin = ads.getSegmentDataStructure().getListMDS().getFirst().getCoordinatePoint().getDate().getTime();
-                Long end = ads.getSegmentDataStructure().getListMDS().getLast().getCoordinatePoint().getDate().getTime();
+                Long begin = ads.getSegmentDataStructure().getListMDS().getFirst().getCoordinatePoint().getDateObject().getTime();
+                Long end = ads.getSegmentDataStructure().getListMDS().getLast().getCoordinatePoint().getDateObject().getTime();
                 tempoObservacao = end - begin;
                 String observation = ads.getClassification();
                 if( mapObservationsIntersec.containsKey(observation) ) {
@@ -726,28 +787,47 @@ public class ActivityRecognition {
                 endObservation = listObservations.get(i+1).getData().getTime();
             String observation = observationObject.getObservation();
             
-            
+            // Se a observação iniciou muito antes do segmento,
             if( (endSegment-beginObservation) > 4*(endSegment-beginSegment) )
                 continue;
-                        
+            
+            //    |  segment    |
+            //                           | observation  |
+            if( beginObservation > endObservation )
+                break;
+            
+
+            //                      |    segment   |
+            //    |     observation     |
             if(beginObservation <= beginSegment && endObservation > beginSegment ) {
+                
                 // se o segmento está dentro da observação
+                //                      |    segment   |
+                //    |     observation                      |
                 if(endSegment <= endObservation) {
                     ObservationTime ot = new ObservationTime();
                     ot.observation = observationObject;
-                    ot.timeAcumulated = new Long(tempoObservacao.longValue());
+                    //ot.timeAcumulated = new Long(tempoObservacao.longValue());
+                    ot.timeAcumulated = endSegment - beginSegment;
                     return ot;
                     //return observation;
+                    
+                //                      |    segment   |
+                //    |     observation              |
                 } else if(endObservation < endSegment) { // segmento termina depois do fim observacao                    
                     tempoObservacao = endObservation - beginSegment;
                 }
             }
             
+            //    |       segment      |
+            //        | observation  |
             if(beginSegment <= beginObservation && endObservation <= endSegment) {
                 tempoObservacao = endObservation - beginObservation;
             }
             
-            if(beginObservation >= beginSegment && beginObservation < endSegment
+            //    |       segment      |
+            //        | observation       |
+            if(beginObservation >= beginSegment //&& beginObservation < endSegment
                     && endObservation > endSegment) {
                 tempoObservacao = endSegment - beginObservation;
             }
@@ -756,7 +836,7 @@ public class ActivityRecognition {
                 if( mapObservationsIntersec.containsKey(observation) ) {
                     ObservationTime ot = mapObservationsIntersec.get(observation);                    
                     ot.timeAcumulated = ot.timeAcumulated + tempoObservacao;                    
-                    mapObservationsIntersec.put(observation, ot);
+                    mapObservationsIntersec.put(observation, ot); // acho q nem precisa, vai dar replace
                     
                     //Long tempo = mapObservationsIntersec.get(observation);
                     //tempo = tempo + tempoObservacao;
@@ -792,6 +872,8 @@ public class ActivityRecognition {
         return otMax;        
         //return maxObservation;        
     }
+
+    
     class ObservationTime {
         Observation observation;
         Long timeAcumulated;        
@@ -823,7 +905,7 @@ public class ActivityRecognition {
     }*/
     
     /**Cria um arquivo no formato ARFF.*/  
-    public void createARFF(LinkedList<ActivityDataStructure> listADS, String filename)
+    /*public void createARFF(LinkedList<ActivityDataStructure> listADS, String filename)
     {
         FastVector atts;
         Instances data;
@@ -966,5 +1048,162 @@ public class ActivityRecognition {
                  ex.printStackTrace();
              }
         }
+    }*/
+    
+    
+    
+    /**Cria um arquivo no formato ARFF.*/  
+    public void createARFF(Instances data, String filename)
+    {
+        //Criação e escrita de um arquivo
+        FileWriter fileWriter = null;
+        try 
+        {
+             File file = new File(filename);
+             fileWriter = new FileWriter(file);
+             fileWriter.write(data.toString());
+             fileWriter.close();
+        } 
+        catch (IOException ex) 
+        {
+             ex.printStackTrace();
+        } 
+        finally 
+        {
+             try 
+             {
+                 fileWriter.close();
+             } 
+             catch (IOException ex) 
+             {
+                 ex.printStackTrace();
+             }
+        }
+    }
+    
+    
+    public Instances createARFFData(LinkedList<ActivityDataStructure> listADS)
+    {
+        FastVector atts;
+        Instances data;
+        double[] vals;
+
+        // 1. Definir os atributos
+        atts = new FastVector();
+        atts.addElement(new Attribute("distributionForward"));
+        atts.addElement(new Attribute("distributionUturn"));
+        atts.addElement(new Attribute("distributionLeft"));
+        atts.addElement(new Attribute("distributionRight"));
+        atts.addElement(new Attribute("distributionNonMoving"));
+        atts.addElement(new Attribute("changeRateForwardToNonMoving"));
+        atts.addElement(new Attribute("changeRateForwardToUturn"));
+        atts.addElement(new Attribute("changeRateForwardToLeft"));
+        atts.addElement(new Attribute("changeRateForwardToRight"));
+        atts.addElement(new Attribute("changeRateNonMovingToForward"));
+        atts.addElement(new Attribute("changeRateNonMovingToUturn"));
+        atts.addElement(new Attribute("changeRateNonMovingToLeft"));
+        atts.addElement(new Attribute("changeRateNonMovingToRight"));
+        atts.addElement(new Attribute("changeRateUturnToForward"));
+        atts.addElement(new Attribute("changeRateUturnToNonmoving"));
+        atts.addElement(new Attribute("changeRateUturnToLeft"));
+        atts.addElement(new Attribute("changeRateUturnToRight"));
+        atts.addElement(new Attribute("changeRateLeftToForward"));
+        atts.addElement(new Attribute("changeRateLeftToNonmoving"));
+        atts.addElement(new Attribute("changeRateLeftToUturn"));
+        atts.addElement(new Attribute("changeRateLeftToRight"));
+        atts.addElement(new Attribute("changeRateRightToForward"));
+        atts.addElement(new Attribute("changeRateRightToNonmoving"));
+        atts.addElement(new Attribute("changeRateRightToUturn"));
+        atts.addElement(new Attribute("changeRateRightToLeft"));
+        atts.addElement(new Attribute("changeRateAccumulated"));
+        atts.addElement(new Attribute("changeRate"));
+        atts.addElement(new Attribute("maxSpeed"));
+        atts.addElement(new Attribute("minSpeed"));
+        atts.addElement(new Attribute("meanSpeed"));
+        atts.addElement(new Attribute("maxAcceleration"));
+        atts.addElement(new Attribute("minAcceleration"));
+        atts.addElement(new Attribute("accumulatedAccelerationPositive"));
+        atts.addElement(new Attribute("accumulatedAccelerationNegative"));
+        atts.addElement(new Attribute("meanAccelerationPositive"));
+        atts.addElement(new Attribute("meanAccelerationNegative"));
+        atts.addElement(new Attribute("countAccelerationPositive"));
+        atts.addElement(new Attribute("countAccelerationNegative"));
+        atts.addElement(new Attribute("changeBetweenPositiveAndNegative"));
+        atts.addElement(new Attribute("accumulatedDistance"));
+        atts.addElement(new Attribute("maxDistanceMoving"));
+        atts.addElement(new Attribute("accumulatedTimeMoving"));
+        atts.addElement(new Attribute("accumulatedTimeNonMoving"));
+        //atts.addElement(new Attribute("timeId"));
+        FastVector classificacao = new FastVector();
+        /*classificacao.addElement("Comendo");
+        classificacao.addElement("EmPeDeitado");
+        classificacao.addElement("Andando");*/
+        for(String observation : observationsTypes) {
+            classificacao.addElement(observation);
+        }
+        //classificacao.addElement("Deitado");
+        atts.addElement(new Attribute("class", classificacao ));
+
+        // 2. Criar o objeto Instances
+        data = new Instances("CowActivity", atts, 0);
+        
+        
+        // 3. Preencher com dados
+        for(ActivityDataStructure ads : listADS)
+        {
+            vals = new double[data.numAttributes()];
+                     
+            vals[0] = ads.getSegmentDataStructure().getDistributionForward();
+            vals[1] = ads.getSegmentDataStructure().getDistributionUturn();
+            vals[2] = ads.getSegmentDataStructure().getDistributionLeft();
+            vals[3] = ads.getSegmentDataStructure().getDistributionRight();
+            vals[4] = ads.getSegmentDataStructure().getDistributionNonMoving();
+            vals[5] = ads.getSegmentDataStructure().getChangeRateForwardToNonMoving();
+            vals[6] = ads.getSegmentDataStructure().getChangeRateForwardToUturn();
+            vals[7] = ads.getSegmentDataStructure().getChangeRateForwardToLeft();
+            vals[8] = ads.getSegmentDataStructure().getChangeRateForwardToRight();
+            vals[9] = ads.getSegmentDataStructure().getChangeRateNonMovingToForward();
+            vals[10] = ads.getSegmentDataStructure().getChangeRateNonMovingToUturn();
+            vals[11] = ads.getSegmentDataStructure().getChangeRateNonMovingToLeft();
+            vals[12] = ads.getSegmentDataStructure().getChangeRateNonMovingToRight();
+            vals[13] = ads.getSegmentDataStructure().getChangeRateUturnToForward();
+            vals[14] = ads.getSegmentDataStructure().getChangeRateUturnToNonmoving();
+            vals[15] = ads.getSegmentDataStructure().getChangeRateUturnToLeft();
+            vals[16] = ads.getSegmentDataStructure().getChangeRateUturnToRight();
+            vals[17] = ads.getSegmentDataStructure().getChangeRateLeftToForward();
+            vals[18] = ads.getSegmentDataStructure().getChangeRateLeftToNonmoving();
+            vals[19] = ads.getSegmentDataStructure().getChangeRateLeftToUturn();
+            vals[20] = ads.getSegmentDataStructure().getChangeRateLeftToRight();
+            vals[21] = ads.getSegmentDataStructure().getChangeRateRightToForward();
+            vals[22] = ads.getSegmentDataStructure().getChangeRateRightToNonmoving();
+            vals[23] = ads.getSegmentDataStructure().getChangeRateRightToUturn();
+            vals[24] = ads.getSegmentDataStructure().getChangeRateRightToLeft();
+            vals[25] = ads.getSegmentDataStructure().getChangeRateAccumulated();
+            vals[26] = ads.getSegmentDataStructure().getChangeRate();
+            vals[27] = ads.getSegmentDataStructure().getMaxSpeed();
+            vals[28] = ads.getSegmentDataStructure().getMinSpeed();
+            vals[29] = ads.getSegmentDataStructure().getMeanSpeed();
+            vals[30] = ads.getSegmentDataStructure().getMaxAcceleration();
+            vals[31] = ads.getSegmentDataStructure().getMinAcceleration();
+            vals[32] = ads.getSegmentDataStructure().getAccumulatedAccelerationPositive();
+            vals[33] = ads.getSegmentDataStructure().getAccumulatedAccelerationNegative();
+            vals[34] = ads.getSegmentDataStructure().getMeanAccelerationPositive();
+            vals[35] = ads.getSegmentDataStructure().getMeanAccelerationNegative();
+            vals[36] = ads.getSegmentDataStructure().getCountAccelerationPositive();
+            vals[37] = ads.getSegmentDataStructure().getCountAccelerationNegative();
+            vals[38] = ads.getSegmentDataStructure().getChangeBetweenPositiveAndNegative();
+            vals[39] = ads.getSegmentDataStructure().getAccumulatedDistance();
+            vals[40] = ads.getSegmentDataStructure().getMaxDistanceMoving();
+            vals[41] = ads.getSegmentDataStructure().getAccumulatedTimeMoving();
+            vals[42] = ads.getSegmentDataStructure().getAccumulatedTimeNonMoving();            
+            //vals[43] = ads.getTimeObservation();
+            vals[43] = classificacao.indexOf(ads.getClassification());
+            
+            
+            // Adicionar atributos no ARFF
+            data.add(new Instance(1.0, vals)); 
+        }
+        
+        return data;
     }
 }

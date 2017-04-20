@@ -18,6 +18,7 @@ import satb.model.dao.CollarDataDAO;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.postgis.Point;
 import satb.behavior.ActivityRecognition;
 import satb.behavior.Observation;
 import satb.behavior.Util;
@@ -236,6 +237,8 @@ public class CollarDataController {
      */
     public void readTxtVenus(String collar) {
         
+        CollarDataDAO collarDataDAO = new CollarDataDAO();
+        
         //Abre um diretório de um já existente
         if (file != null) {
             File existDirectory = file.getParentFile();
@@ -292,7 +295,7 @@ public class CollarDataController {
                 // ‘E’ = Estimated (dead reckoning) mode ‘M’ = Manual input mode ‘S’ = Simulator mode
                 Character modeIndicator = null;
 
-                CoordinateVenus ponto;
+                CoordinateVenus ponto = null;
                 Boolean excecao = false;
                 
                 int quantidade = 0;
@@ -310,6 +313,9 @@ public class CollarDataController {
                                 if (gpsQuality != null && status != null && modeIndicator != null
                                         && gpsQuality != '0' && status == 'A' && modeIndicator != 'N') {
 
+                                    //if(ponto != null)
+                                    //    collarDataDAO.insertDataVenus(collar, ponto);
+                                        
                                     ponto = new CoordinateVenus();
 
                                     ponto.setUtcTime(Double.parseDouble(utcTime));
@@ -338,9 +344,10 @@ public class CollarDataController {
                                     // UTC date of position fix, ddmmyy format
                                     Date data = null;
                                     try { 
-                                        data = new SimpleDateFormat("ddMMyyHHmmss.SSSZ").parse(utcDate+utcTime+"+0000");  
+                                        //data = new SimpleDateFormat("ddMMyyHHmmss.SSSZ").parse(utcDate+utcTime+"+0000");  
+                                        data = new SimpleDateFormat("ddMMyyHHmmss.SSS").parse(utcDate+utcTime);  
                                         
-                                        ponto.setDate(data);
+                                        ponto.setDateObject(data);
 
                                         //ponto.print();
                                         quantidade++;
@@ -395,13 +402,31 @@ public class CollarDataController {
                         status = null;
                         modeIndicator = null;
                         
-                        //e.printStackTrace();
                     }
                 } // end while
+                
+                // adiciona o último
+                //if(ponto != null)
+                  //  collarDataDAO.insertDataVenus(collar, ponto);
+                
                 if(ActivityRecognition.DEBUG)
                 System.out.println("Lista de coordenadas de GPS criada. Tamanho = "+listCoordinate.size());
                 
-                ActivityRecognition ac = new ActivityRecognition(listCoordinate, readTxtObservations());
+                LinkedList<Observation> lo = readTxtObservations(collar);
+                
+                collarDataDAO.insertDataVenus(collar, listCoordinate);
+                collarDataDAO.insertObservation(lo);
+                
+                /*for( CoordinateVenus o : listCoordinate) {
+                    System.out.println(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(o.getDateObject()) + ";"+ o.getDateObject().getTime() + "; 1;");
+                }*/
+                
+               /* for(Observation o : lo) {
+                    System.out.println(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(o.getData())+ ";"+ o.getObservation() +";" + o.getData().getTime() + "; 2;");
+                }
+                
+                ActivityRecognition ac = new ActivityRecognition(listCoordinate, lo);
+                */
                 
                 //System.out.println("quantidade = "+quantidade);
             } catch (Exception e) {
@@ -409,10 +434,267 @@ public class CollarDataController {
                 e.printStackTrace();
             }
         }
-
     }
     
-    public LinkedList<Observation> readTxtObservations() {
+    
+    public void readTxtVenusLomba(String collar) {
+        
+        CollarDataDAO collarDataDAO = new CollarDataDAO();
+        
+        //Abre um diretório de um já existente
+        if (file != null) {
+            File existDirectory = file.getParentFile();
+            fileChooser.setInitialDirectory(existDirectory);
+            fileChooser.getExtensionFilters().clear();
+        }
+
+        //Define o filtro da extensão (.txt)
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        //Abrir e mostrar a janela de diretórios
+        file = fileChooser.showOpenDialog(null);
+
+        //Caso algum arquivo tenha sido selecionado
+        if (file != null) {
+            try {
+                labelFile.setText(file.getPath());
+                BufferedReader is = new BufferedReader(new FileReader(file.getPath()));
+
+                //String que receberá as linhas do arquivo
+                String line;
+                
+                LinkedList<CoordinateVenus> listCoordinate = new LinkedList<>() ;
+
+                //Atributos
+                String utcTime = null; // UTC time in hhmmss.sss format (000000.00 ~ 235959.999)
+                Double latitude = null; // Latitude in dddmm.mmmm format   Leading zeros transmitted
+                Character nsIndicator = null; // Latitude hemisphere indicator ‘N’ = North ‘S’ = South
+                Double longitude = null; // Longitude in dddmm.mmmm format   Leading zeros transmitted
+                Character ewIndicator = null; // Longitude hemisphere indicator 'E' = East 'W' = West
+                /**
+                 * GPS quality indicator 0: position fix unavailable 1: valid
+                 * position fix, SPS mode 2: valid position fix, differential
+                 * GPS mode 3: GPS PPS Mode, fix valid 4: Real Time Kinematic.
+                 * System used in RTK mode with fixed integers 5: Float RTK.
+                 * Satellite system used in RTK mode. Floating integers 6:
+                 * Estimated (dead reckoning) Mode 7: Manual Input Mode 8:
+                 * Simulator Mode
+                 *
+                 */
+                Character gpsQuality = null;
+                Integer satellitesUsed = null;
+                Double PDOP = null; //Position dilution of precision (00.0 to 99.9)
+                Double HDOP = null; // Horizontal dilution of precision (00.0 to 99.9)
+                Double VDOP = null; // Vertical dilution of precision (00.0 to 99.9)                          
+                Double altitude = null;
+                Integer differencialReferenceStationID = null;
+                Character status = null; // ‘V’ = Navigation receiver warning ‘A’ = Data Valid
+                Double speedGPS = null; //Speed over ground in kilometers per hour (0000.0 ~ 1800.0)
+                Double course = null; //Course over ground in degrees (000.0 ~ 359.9)
+                String utcDate = null; // UTC date of position fix, ddmmyy format
+                // Mode indicator ‘N’ = Data not valid ‘A’ = Autonomous mode ‘D’ = Differential mode 
+                // ‘E’ = Estimated (dead reckoning) mode ‘M’ = Manual input mode ‘S’ = Simulator mode
+                Character modeIndicator = null;
+
+                CoordinateVenus ponto = null;
+                Boolean excecao = false;
+                
+                int quantidade = 0;
+
+                while ((line = is.readLine()) != null) {
+
+                    try {
+
+                        //se a linha possui caracteres
+                        if (line.length() > 0) {
+                            String[] split = line.split(",");
+
+                            if (split[0].equals("$GPGGA")) {
+
+                                if (gpsQuality != null && status != null && modeIndicator != null
+                                        && gpsQuality != '0' && status == 'A' && modeIndicator != 'N') {
+
+                                    //if(ponto != null)
+                                    //    collarDataDAO.insertDataVenus(collar, ponto);
+                                        
+                                    ponto = new CoordinateVenus();
+
+                                    ponto.setUtcTime(Double.parseDouble(utcTime));
+                                    if(nsIndicator == 'S')
+                                        latitude = latitude*-1;
+                                    ponto.setLatitude(Util.coordinateMinToDegree(latitude));
+                                    ponto.setNsIndicator(nsIndicator);
+                                    if(ewIndicator == 'W')
+                                        longitude = longitude*-1;
+                                    ponto.setLongitude(Util.coordinateMinToDegree(longitude));
+                                    ponto.setEwIndicator(ewIndicator);
+                                    ponto.setGpsQuality(gpsQuality);
+                                    ponto.setSatellitesUsed(satellitesUsed);
+                                    ponto.setPDOP(PDOP);
+                                    ponto.setHDOP(HDOP);
+                                    ponto.setVDOP(VDOP);
+                                    ponto.setAltitude(altitude);
+                                    ponto.setDifferencialReferenceStationID(differencialReferenceStationID);
+                                    ponto.setStatus(status);
+                                    ponto.setSpeedGPS(speedGPS);
+                                    ponto.setCourse(course);
+                                    ponto.setUtcDate(Integer.parseInt(utcDate));
+                                    ponto.setModeIndicator(modeIndicator);
+                                    
+                                    // UTC time in hhmmss.sss format (000000.00 ~ 235959.999)
+                                    // UTC date of position fix, ddmmyy format
+                                    Date data = null;
+                                    try { 
+                                        //data = new SimpleDateFormat("ddMMyyHHmmss.SSSZ").parse(utcDate+utcTime+"+0000");  
+                                        data = new SimpleDateFormat("ddMMyyHHmmss.SSS").parse(utcDate+utcTime);  
+                                        
+                                        ponto.setDateObject(data);
+
+                                        //ponto.print();
+                                        quantidade++;
+                                    
+                                        //if(quantidade % 10 == 0)
+                                        listCoordinate.add(ponto);
+                                        
+                                    } catch (ParseException e) { 
+                                        // e.printStackTrace(); 
+                                    } finally {
+                                        gpsQuality = null;
+                                        status = null;
+                                        modeIndicator = null;
+                                    }
+                                    //SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS zZ");
+                                    //System.out.println( format1.format(data) );                                    
+                                }
+
+                                utcTime = split[1].trim();
+                                latitude = Double.parseDouble(split[2]);
+                                nsIndicator = split[3].charAt(0);
+                                longitude = Double.parseDouble(split[4]);
+                                ewIndicator = split[5].charAt(0);
+                                gpsQuality = split[6].charAt(0);
+                                satellitesUsed = Integer.parseInt(split[7]);
+                                //HDOP = Double.parseDouble(split[8]);
+                                altitude = Double.parseDouble(split[9]);
+                                differencialReferenceStationID = Integer.parseInt(split[14].split("\\*")[0]);
+                            }
+
+                            if (split[0].equals("$GPGSA")) {                                
+                                PDOP = Double.parseDouble(split[15]);
+                                HDOP = Double.parseDouble(split[16]);
+                                VDOP = Double.parseDouble(split[17].split("\\*")[0]);
+                            }
+
+                            if (split[0].equals("$GPRMC")) {
+                                status = split[2].charAt(0);
+                                //speedGPS = Double.parseDouble(split[7]);
+                                course = Double.parseDouble(split[8]);
+                                utcDate = split[9].trim();
+                                modeIndicator = split[12].split("\\*")[0].charAt(0);
+                            }
+
+                            if (split[0].equals("$GPVTG")) {
+                                speedGPS = Double.parseDouble(split[7]);
+                            }
+                        }
+                    } catch (Exception e) {
+                        
+                        gpsQuality = null;
+                        status = null;
+                        modeIndicator = null;
+                        
+                    }
+                } // end while
+                
+                // adiciona o último
+                //if(ponto != null)
+                  //  collarDataDAO.insertDataVenus(collar, ponto);
+                
+                if(ActivityRecognition.DEBUG)
+                System.out.println("Lista de coordenadas de GPS criada. Tamanho = "+listCoordinate.size());
+                
+                LinkedList<Observation> lo = readTxtObservationsLomba(collar);
+                
+                /*collarDataDAO.insertDataVenus(collar, listCoordinate);
+                collarDataDAO.insertObservation(lo);*/
+                
+                /*for( CoordinateVenus o : listCoordinate) {
+                    System.out.println(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(o.getDateObject()) + ";"+ o.getDateObject().getTime() + "; 1;");
+                }                
+                for(Observation o : lo) {
+                    System.out.println(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(o.getData())+ ";"+ o.getObservation() +";" + o.getData().getTime() + "; 2;");
+                }
+                */
+                
+                ActivityRecognition ac = new ActivityRecognition(listCoordinate, lo);
+                
+                
+                //System.out.println("quantidade = "+quantidade);
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    public LinkedList<Observation> readTxtObservationsLomba(String collar) {
+        CollarDataDAO collarDataDAO = new CollarDataDAO();
+        
+        //Define o filtro da extensão (.txt)
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        //Abrir e mostrar a janela de diretórios
+        file = fileChooser.showOpenDialog(null);
+
+        //Caso algum arquivo tenha sido selecionado
+        if (file != null) {
+            try {
+                labelFile.setText(file.getPath());
+                BufferedReader is = new BufferedReader(new FileReader(file.getPath()));
+
+                //String que receberá as linhas do arquivo
+                String line;
+                
+                LinkedList<Observation> listObservations = new LinkedList<>() ;
+
+                //Atributos
+                Long time;  
+                Date data;
+                String observation;
+
+                while ((line = is.readLine()) != null) {
+                        //se a linha possui caracteres
+                        if (line.length() > 0) {
+                            
+                            String[] split = line.split(";");
+
+                            if(split.length > 2) {
+                                data = new SimpleDateFormat("HHmmss ddMMyyyy").parse(split[0]+" "+split[1]);  
+                                time = data.getTime();
+                                observation = split[2].trim();
+
+                                Observation o = new Observation(time, data, observation, collar);
+                                listObservations.add(o);
+                            }
+                        }
+                }
+                if(ActivityRecognition.DEBUG)
+                System.out.println("Lista de observações criada. Tamanho = "+listObservations.size());
+                
+                return listObservations;
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+    
+    
+    public LinkedList<Observation> readTxtObservations(String collar) {
+        CollarDataDAO collarDataDAO = new CollarDataDAO();
         
         //Define o filtro da extensão (.txt)
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
@@ -447,7 +729,10 @@ public class CollarDataController {
                             data = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss zZ").parse(split[1]);  
                             observation = split[2].trim();
                             
-                            listObservations.add(new Observation(time, data, observation));
+                            Observation o = new Observation(time, data, observation, collar);
+                            listObservations.add(o);
+                            
+                            //collarDataDAO.insertObservation(o);
                         }
                 }
                 if(ActivityRecognition.DEBUG)
@@ -462,6 +747,7 @@ public class CollarDataController {
         return null;
     }
 
+    
     /**
      * Extrai as informações da linha.
      */

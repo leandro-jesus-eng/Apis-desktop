@@ -10,6 +10,8 @@ import weka.classifiers.evaluation.NominalPrediction;
 import weka.classifiers.trees.J48;
 import weka.core.FastVector;
 import weka.core.Instances;
+import weka.filters.Filter;
+import weka.filters.supervised.instance.Resample;
 
 public class WekaTest {
     public static BufferedReader readDataFile(String filename) {
@@ -118,7 +120,7 @@ public class WekaTest {
     }
     
     
-    public Double go2(String file) throws Exception {
+    /*public Double go2(String file) throws Exception {
         // I've commented the code as best I can, at the moment.
         // Comments are denoted by "//" at the beginning of the line.
         
@@ -129,12 +131,12 @@ public class WekaTest {
         
         
         // Choose a set of classifiers
-        /*Classifier[] models = {     new weka.classifiers.meta.END(),
+        Classifier[] models = {     new weka.classifiers.meta.END(),
                                     new weka.classifiers.functions.SMO(),
                                     new weka.classifiers.meta.ClassificationViaRegression(),
                                     new weka.classifiers.trees.RandomForest(),
                                     new J48(),
-                                    };*/
+                                    };
         
         Classifier[] models = { new weka.classifiers.meta.END() };
         
@@ -160,6 +162,59 @@ public class WekaTest {
             
         }
         System.out.println("=======================================================================================");
+        
+        return maxCorrect;
+    }*/
+    
+    public Double go2(Instances data, String message) throws Exception {
+        
+        data.setClassIndex(data.numAttributes() - 1);
+        
+        
+        Resample filter = new Resample();
+        filter.setBiasToUniformClass(1.0);
+        filter.setInputFormat(data);
+        filter.setSampleSizePercent(100);
+        filter.setNoReplacement(false);
+        data = Filter.useFilter(data, filter);
+        
+        // Choose a set of classifiers
+        Classifier[] models = {     new weka.classifiers.meta.END(),
+                                    new weka.classifiers.functions.SMO(),
+                                    new weka.classifiers.meta.ClassificationViaRegression(),
+                                    new weka.classifiers.trees.RandomForest(),
+                                    new J48(),
+                                    new weka.classifiers.functions.MultilayerPerceptron(),
+                                    new weka.classifiers.lazy.KStar(),                                    
+                                    new weka.classifiers.rules.ZeroR(),
+                                    };
+        
+        //Classifier[] models = { new weka.classifiers.meta.END() };
+        
+        Double maxCorrect = 0.0;
+        // Run for each classifier model
+        
+        Long tempo = System.currentTimeMillis();
+        for(int j = 0; j < models.length; j++) {
+            Evaluation eval = new Evaluation(data);
+            Random rand = new Random(1);  // using seed = 1
+            int folds = 10;
+            eval.crossValidateModel(models[j], data, folds, rand);
+            
+            if(eval.correct() > maxCorrect) {                
+                maxCorrect = 100 * eval.correct() / ( eval.correct()+eval.incorrect() );
+            }
+            
+            synchronized (this) {
+                System.out.println("--------------------"+models[j].getClass().getSimpleName()+"---------------------------------");
+                System.out.println( message );
+                System.out.println(eval.toSummaryString());
+                System.out.println(eval.toClassDetailsString());
+                System.out.println(eval.toMatrixString());            
+                System.out.println("\nTempo de Execução (segundos) = "+((System.currentTimeMillis()-tempo)/1000.0) );
+                System.out.println("---------------------------------------------------------------------------------------------");
+            }
+        }
         
         return maxCorrect;
     }

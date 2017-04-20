@@ -5,6 +5,7 @@ import java.io.IOException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.stage.FileChooser;
+import satb.Util;
 import satb.controller.functions.KMLFunctions;
 import satb.model.Area;
 import satb.model.Coordinate;
@@ -194,7 +195,7 @@ public class AreaController
     public void showArea(String name, ObservableList<Coordinate> area) throws Exception
     {
         String path = "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe";
-        String pathkml = "C:/Users/Marcel/Documents/Mestrado/";
+        String pathkml = Util.getCurrentRelativePath();
 
         //Invoca o método de construção do KML
         File fileArea = kml.buildArea(kml.buildAreaKmlName(name), name, area);

@@ -8,6 +8,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import satb.view.About;
+import satb.view.ActivityRecognitionView;
 import satb.view.AreaShadowView;
 import satb.view.AreaView;
 import satb.view.CollarDataView;
@@ -258,8 +259,25 @@ public class ToolBar
             }
          });
          
-      
+         
          //MENU 3
+         Menu menu5 = new Menu("Comportamento");
+         
+         MenuItem menuItem5A = new MenuItem("Treinar classificador");
+         menuItem5A.setOnAction(new EventHandler<ActionEvent>() 
+         {
+            @Override public void handle(ActionEvent e) 
+            {
+                try {                
+                    new ActivityRecognitionView().execute();
+                } catch (Exception ex) {
+                    Logger.getLogger(ToolBar.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+         });
+         
+      
+         //MENU 4
          Menu menu4 = new Menu("Ajuda");
          MenuItem menuItem4A = new MenuItem("Sobre o Sistema");
          menuItem4A.setOnAction(new EventHandler<ActionEvent>() 
@@ -286,10 +304,13 @@ public class ToolBar
          menu3.getItems().add(menuItem3D); 
          menu3.getItems().add(menuItem3E);
          
+         menu5.getItems().add(menuItem5A);
+         
          menu4.getItems().add(menuItem4A);
          menuBar.getMenus().add(menu1);
          menuBar.getMenus().add(menu2);
          menuBar.getMenus().add(menu3);
+         menuBar.getMenus().add(menu5);
          menuBar.getMenus().add(menu4);
     }
     

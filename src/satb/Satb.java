@@ -1,5 +1,6 @@
 package satb;
 
+import java.io.File;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;
@@ -31,6 +32,7 @@ public class Satb extends Application
     /**Método principal.*/
     public static void main(String[] args) 
     {
+        System.out.println(Util.getCurrentRelativePath()+ File.separator);
         launch(args);
     }             
 }

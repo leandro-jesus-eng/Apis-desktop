@@ -3,6 +3,7 @@ package satb.controller;
 import java.io.File;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import satb.Util;
 import satb.controller.functions.ClusteringFunctions;
 import satb.controller.functions.KMLFunctions;
 import satb.model.ClusterPoints;
@@ -29,7 +30,7 @@ public class TrajectoryClusteringController
         kml = new KMLFunctions();
         clustering = new ClusteringFunctions();
         path = "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe";
-        pathkml = "C:/Users/Marcel/Documents/Mestrado/";
+        pathkml = Util.getCurrentRelativePath();
         outline = 0;
         numberElements = 0;
         clusters = FXCollections.observableArrayList();

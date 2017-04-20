@@ -13,13 +13,14 @@ public class Coordinate
     
     //Atributos
     private int id;
+    private String collar;
+    
     private double latitudeY;
     private double longitudeX;
-    private String collar;
-    private String hour;
-    private String date;
     private Point coordinate;
-    private double speed;
+    private String hour;
+    private String date;    
+    private double speed;    
     private int clusterId;
     private boolean visited;
     private int timeIndex;
@@ -29,6 +30,7 @@ public class Coordinate
     {
         this.clusterId = NULL_CLUSTER_ID;
         this.visited = false;
+        this.coordinate = new Point();
     }
     
     /**Construtor com 1 parâmetro. */
@@ -120,6 +122,11 @@ public class Coordinate
     public String getCollar()
     {
         return this.collar;
+    }
+    
+    public void setCollar(String collar)
+    {
+        this.collar = collar;
     }
     
     /**Retorna o hora em que o ponto foi captado. */
@@ -233,6 +240,8 @@ public class Coordinate
     {
         this.timeIndex = index;
     }
+    
+    
     
  
     

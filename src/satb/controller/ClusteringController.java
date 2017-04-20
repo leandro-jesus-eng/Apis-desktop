@@ -17,6 +17,7 @@ import jsat.linear.Vec;
 import jsat.linear.VecPaired;
 import jsat.linear.distancemetrics.NormalizedEuclideanDistance;
 import jsat.linear.vectorcollection.RTree;
+import satb.Util;
 import satb.controller.functions.ARFFFunctions;
 import satb.controller.functions.KMLFunctions;
 import satb.controller.functions.WekaFunctions;
@@ -54,7 +55,7 @@ public class ClusteringController
         weka = new WekaFunctions();
         arff = new ARFFFunctions();
         path = "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe";
-        pathkml = "C:/Users/Marcel/Documents/Mestrado/";
+        pathkml = Util.getCurrentRelativePath();
         outline = 0;
     }
  

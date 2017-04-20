@@ -13,6 +13,7 @@ import satb.model.Coordinate;
 import satb.model.dao.PastureDAO;
 import satb.model.dao.SimulatorPointsDAO;
 import org.postgis.Point;
+import satb.Util;
 
 /**Classe que representa a camada de controle para SimulatorPoints.
 * @author Marcel Tolentino Pinheiro de Oliveira.
@@ -34,7 +35,7 @@ public class SimulatorPointsController
         geoFunction = new GeoFunctions();
         kml = new KMLFunctions();
         path = "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe";
-        pathkml = "C:/Users/Marcel/Documents/Mestrado/";
+        pathkml = Util.getCurrentRelativePath();
     }
     
     /**Invoca o método generatePointInPasture do SimulatorPointsDAO. */

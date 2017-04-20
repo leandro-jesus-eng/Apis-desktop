@@ -1,9 +1,12 @@
 package satb.model.dao;
 
 import java.sql.*;
+import java.util.LinkedList;
+import org.postgis.Point;
 import satb.model.Coordinate;
 import satb.model.Database;
-import org.postgis.Point;
+import satb.behavior.Observation;
+import satb.model.CoordinateVenus;
 
 /**Classe com manipulação de métodos de inserção de dados capturados pelos colares.
 * @author Marcel Tolentino Pinheiro de Oliveira
@@ -32,7 +35,7 @@ public class CollarDataDAO
     /**Insere no banco os dados obtidos pelos colares. */
     public void insertData(String collar, String longitude, String latitude, String date, String hour) throws Exception 
     {
-           base = new Database();
+        base = new Database();
 	// iniciando a conexao
 	System.out.println("Conectado e preparando a inserção dos dados capturados pelos colares");
 	Statement stmt = null;
@@ -91,6 +94,275 @@ public class CollarDataDAO
 		}
 	} 
    }
+   
+   
+    public void insertDataVenus (String collar, CoordinateVenus c) throws Exception {
+        insertDataARFF(collar, c);
+       
+        base = new Database();
+	Statement stmt = null;
+	try 
+	{
+            stmt = base.getConnection().createStatement();
+            
+            ResultSet rs = stmt.executeQuery("select max(id) as id from animal_position");
+            rs.next();
+            c.setId(rs.getInt("id"));
+            
+            stmt.execute("INSERT INTO public.animal_position_venus(" +
+                    "	id, \"nsIndicator\", \"ewIndicator\", \"utcTime\", \"utcDate\", \"speedGPS\", date, \"gpsQuality\", \"satellitesUsed\","
+                    + " \"PDOP\", \"HDOP\", \"VDOP\", altitude, \"differencialReferenceStationID\", status, course, \"modeIndicator\") "
+            + " VALUES ("+c.getId()+", '"+c.getNsIndicator()+"', '"+c.getEwIndicator()+"', "+c.getUtcTime()+", "+c.getUtcDate()+", "+c.getSpeedGPS()+", "+
+                    c.getDateObject().getTime()+", '"+c.getGpsQuality()+"', "+c.getSatellitesUsed()+", "+c.getPDOP()+", "+c.getHDOP()+", "+c.getVDOP()+", "+
+                    c.getAltitude()+", "+c.getDifferencialReferenceStationID()+", '"+c.getStatus()+"', "+c.getCourse()+", '"+c.getModeIndicator()+"');");                
+        }
+        catch (SQLException e) 
+	{
+                e.printStackTrace();
+		System.out.println(e.getMessage());
+	} 
+	finally 
+	{
+		try 
+		{
+			stmt.close();
+			base.closeConnection();
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("Erro ao desconectar");
+                        e.printStackTrace();
+		}
+	}
+    }
+    
+    public void insertDataVenus (String collar, LinkedList<CoordinateVenus> listCoordinate) throws Exception {
+        
+        base = new Database();
+	Statement stmt = null;
+	try 
+	{
+            stmt = base.getConnection().createStatement();
+            
+            
+            for( CoordinateVenus c : listCoordinate) {
+            
+                //insertDataARFF(collar, c);
+                stmt.execute("INSERT INTO animal_position (collar, longitude, latitude, coordinate, date, hour) "
+                + "VALUES ('" + collar + "', '" + c.getLongitudeX() + "', '" + c.getLatitudeY() + "','" + getPoint(String.valueOf(c.getLongitudeX()), String.valueOf(c.getLatitudeY())) +  "', '" + c.getDate() + "', '" + c.getHour() + "')");                
+
+                ResultSet rs = stmt.executeQuery("select max(id) as id from animal_position");
+                rs.next();
+                c.setId(rs.getInt("id"));
+
+                stmt.execute("INSERT INTO public.animal_position_venus(" +
+                        "	id, \"nsIndicator\", \"ewIndicator\", \"utcTime\", \"utcDate\", \"speedGPS\", date, \"gpsQuality\", \"satellitesUsed\","
+                        + " \"PDOP\", \"HDOP\", \"VDOP\", altitude, \"differencialReferenceStationID\", status, course, \"modeIndicator\") "
+                + " VALUES ("+c.getId()+", '"+c.getNsIndicator()+"', '"+c.getEwIndicator()+"', "+c.getUtcTime()+", "+c.getUtcDate()+", "+c.getSpeedGPS()+", "+
+                        c.getDateObject().getTime()+", '"+c.getGpsQuality()+"', "+c.getSatellitesUsed()+", "+c.getPDOP()+", "+c.getHDOP()+", "+c.getVDOP()+", "+
+                        c.getAltitude()+", "+c.getDifferencialReferenceStationID()+", '"+c.getStatus()+"', "+c.getCourse()+", '"+c.getModeIndicator()+"');");                
+            }
+        }
+        catch (SQLException e) 
+	{
+                e.printStackTrace();
+		System.out.println(e.getMessage());
+	} 
+	finally 
+	{
+		try 
+		{
+			stmt.close();
+			base.closeConnection();
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("Erro ao desconectar");
+                        e.printStackTrace();
+		}
+	}
+    }
+    
+    private CoordinateVenus populateObjectCoordinateVenus(ResultSet rs) throws SQLException {
+        
+        CoordinateVenus c = new CoordinateVenus();
+        
+        c.setId(rs.getInt("id"));
+        //ap.id, ap.collar, ap.longitude, ap.latitude, ap.coordinate
+        c.setCollar(rs.getString("collar"));
+        c.setLongitude(rs.getDouble("longitude"));
+        c.setLatitude(rs.getDouble("latitude"));
+        c.setCoordinate( new Point(c.getLongitude(), c.getLatitude()) );
+        c.setNsIndicator(rs.getString("nsIndicator").charAt(0));
+        c.setEwIndicator(rs.getString("ewIndicator").charAt(0));
+        c.setUtcTime(rs.getDouble("utcTime"));
+        c.setUtcDate(rs.getInt("utcDate"));
+        c.setSpeedGPS(rs.getDouble("speedGPS"));
+        c.setDateObject(new java.util.Date(rs.getLong("date")));
+        c.setGpsQuality(rs.getString("gpsQuality").charAt(0));
+        c.setSatellitesUsed(rs.getInt("satellitesUsed"));
+        c.setPDOP(rs.getDouble("PDOP"));
+        c.setHDOP(rs.getDouble("HDOP"));
+        c.setVDOP(rs.getDouble("VDOP"));
+        c.setAltitude(rs.getDouble("altitude"));
+        c.setDifferencialReferenceStationID(rs.getInt("differencialReferenceStationID"));
+        c.setStatus(rs.getString("status").charAt(0));
+        c.setCourse(rs.getDouble("course"));
+        c.setModeIndicator(rs.getString("modeIndicator").charAt(0));     
+        
+        return c;
+    }
+    
+    public LinkedList<CoordinateVenus> selectAllDataVenus () {
+        
+        LinkedList<CoordinateVenus> listCoordinate = new LinkedList<>() ;
+        
+	Statement stmt = null;
+	try 
+	{
+            base = new Database();
+            stmt = base.getConnection().createStatement();
+            
+            ResultSet rs = stmt.executeQuery("select ap.id, ap.collar, ap.longitude, ap.latitude, ap.coordinate, \"nsIndicator\", \"ewIndicator\", \"utcTime\", \"utcDate\", \"speedGPS\", apv.\"date\", \n" +
+                "\"gpsQuality\", \"satellitesUsed\", \"PDOP\", \"HDOP\", \"VDOP\", altitude, \n" +
+                "\"differencialReferenceStationID\", status, course, \"modeIndicator\"\n" +
+                "from animal_position ap\n" +
+                "inner join animal_position_venus apv on apv.id = ap.id order by id");                
+
+            while (rs.next()) 
+            {                
+                listCoordinate.add( populateObjectCoordinateVenus(rs) );
+            }
+        }
+        catch (Exception e) 
+	{
+                e.printStackTrace();
+		System.out.println(e.getMessage());
+	} 
+	finally 
+	{
+		try 
+		{
+			stmt.close();
+			base.closeConnection();
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("Erro ao desconectar");
+                        e.printStackTrace();
+		}
+	}
+        
+        return listCoordinate;
+    }
+    
+    
+    private Observation populateObjectObservation(ResultSet rs) throws SQLException {        
+        return new Observation( rs.getLong("time"), new java.util.Date(rs.getLong("time")), rs.getString("observation"), rs.getString("collar") );
+    }
+        
+    public LinkedList<Observation> selectAllObservation () {
+        
+        LinkedList<Observation> listObservation = new LinkedList<>() ;
+        
+        Statement stmt = null;
+	try 
+	{
+            base = new Database();
+            stmt = base.getConnection().createStatement();
+            
+            ResultSet rs = stmt.executeQuery("SELECT \"time\", observation, collar\n" +
+                "	FROM public.observation;");                
+
+            while (rs.next()) 
+            {                
+                listObservation.add( populateObjectObservation(rs) );
+            }
+        }
+        catch (Exception e) 
+	{
+                e.printStackTrace();
+		System.out.println(e.getMessage());
+	} 
+	finally 
+	{
+		try 
+		{
+			stmt.close();
+			base.closeConnection();
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("Erro ao desconectar");
+                        e.printStackTrace();
+		}
+	}
+        
+        return listObservation;
+    }
+    
+        
+    public void insertObservation (LinkedList<Observation> lo) throws Exception {
+        
+        base = new Database();
+	Statement stmt = null;
+        try 
+	{            
+            stmt = base.getConnection().createStatement();
+            
+            for( Observation o : lo) {            
+                stmt.execute("INSERT INTO public.observation(" +
+                        "	time, observation, collar ) "
+                + " VALUES ("+o.getTime()+",'"+o.getObservation()+"','"+o.getCollar()+"');");                
+            }
+        }
+        catch (SQLException e) 
+	{
+		System.out.println(e.getMessage());
+	} 
+	finally 
+	{
+		try 
+		{
+			stmt.close();
+			base.closeConnection();
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("Erro ao desconectar");
+		}
+	}
+    }
+    
+    public void insertObservation (Observation o) throws Exception {
+        
+        base = new Database();
+	Statement stmt = null;
+	try 
+	{
+            stmt = base.getConnection().createStatement();
+            
+            stmt.execute("INSERT INTO public.observation(" +
+                    "	time, observation, collar ) "
+            + " VALUES ("+o.getTime()+",'"+o.getObservation()+"','"+o.getCollar()+"');");                
+        }
+        catch (SQLException e) 
+	{
+		System.out.println(e.getMessage());
+	} 
+	finally 
+	{
+		try 
+		{
+			stmt.close();
+			base.closeConnection();
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("Erro ao desconectar");
+		}
+	}
+    }
   
    
    /**Insere no banco os dados as trajetórias contidas no ARFFs. */

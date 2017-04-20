@@ -7,6 +7,7 @@ import java.util.Iterator;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.stage.FileChooser;
+import satb.Util;
 import satb.controller.functions.KMLFunctions;
 import satb.controller.functions.TrajectoryFuntions;
 import satb.model.Area;
@@ -46,7 +47,7 @@ public class TrajectoryController
         fileChooser = new FileChooser();
         kml = new KMLFunctions();
         path = "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe";
-        pathkml = "C:/Users/Marcel/Documents/Mestrado/";
+        pathkml = Util.getCurrentRelativePath();
     }
     
     

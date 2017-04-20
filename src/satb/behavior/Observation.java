@@ -12,17 +12,22 @@ import java.util.Date;
  */
 public class Observation {
      
-    private Long time;        
+    private Long time; // data completa
     
     private Date data;
     
     private String observation;
+    
+    private String collar;
 
-    public Observation(Long time, Date data, String observation) {
+   
+    public Observation(Long time, Date data, String observation, String collar) {
         this.time = time;
         this.data = data;
         this.observation = observation;
+        this.collar = collar;
     }
+    
 
     public Long getTime() {
         return time;
@@ -46,5 +51,13 @@ public class Observation {
 
     public void setObservation(String observation) {
         this.observation = observation;
+    }
+    
+    public String getCollar() {
+        return collar;
+    }
+
+    public void setCollar(String collar) {
+        this.collar = collar;
     }
 }

@@ -1,21 +1,30 @@
 package satb.model;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import satb.behavior.Util;
 
 /** 
  * Classe representa um ponto GPS.
  * @author Leandro de Jesus.
  */
-public class CoordinateVenus
+public class CoordinateVenus extends Coordinate
 {
 
     //Atributos
-    private Double utcTime = null; // UTC time in hhmmss.sss format (000000.00 ~ 235959.999)
     private Double latitude = null; // Latitude in dddmm.mmmm format   Leading zeros transmitted
+    private Double longitude = null; // Longitude in dddmm.mmmm format   Leading zeros transmitted    
     private Character nsIndicator = null; // Latitude hemisphere indicator ‘N’ = North ‘S’ = South
-    private Double longitude = null; // Longitude in dddmm.mmmm format   Leading zeros transmitted
     private Character ewIndicator = null; // Longitude hemisphere indicator 'E' = East 'W' = West
+    private Double utcTime = null; // UTC time in hhmmss.sss format (000000.00 ~ 235959.999)    
+    private Integer utcDate = null; // UTC date of position fix, ddmmyy format
+    private Double speedGPS = null; //Speed over ground in kilometers per hour (0000.0 ~ 1800.0)
+
+    private Date date;
+    
     /**
      * GPS quality indicator 0: position fix unavailable 1: valid
      * position fix, SPS mode 2: valid position fix, differential
@@ -34,20 +43,17 @@ public class CoordinateVenus
     private Double altitude = null;
     private Integer differencialReferenceStationID = null;
     private Character status = null; // ‘V’ = Navigation receiver warning ‘A’ = Data Valid
-    private Double speedGPS = null; //Speed over ground in kilometers per hour (0000.0 ~ 1800.0)
-    private Double course = null; //Course over ground in degrees (000.0 ~ 359.9)
-    private Integer utcDate = null; // UTC date of position fix, ddmmyy format
+    private Double course = null; //Course over ground in degrees (000.0 ~ 359.9)    
     // Mode indicator ‘N’ = Data not valid ‘A’ = Autonomous mode ‘D’ = Differential mode 
     // ‘E’ = Estimated (dead reckoning) mode ‘M’ = Manual input mode ‘S’ = Simulator mode
     private Character modeIndicator = null;
     
     
-    private Date date;
-    
     
     /**Construtor Default. */
     public CoordinateVenus()
     {
+        super();
     }
 
     public Double getUtcTime() {
@@ -63,6 +69,7 @@ public class CoordinateVenus
     }
 
     public void setLatitude(Double latitude) {
+        super.setLatitudeY(latitude);
         this.latitude = latitude;
     }
 
@@ -79,6 +86,7 @@ public class CoordinateVenus
     }
 
     public void setLongitude(Double longitude) {
+        super.setLongitudeX(longitude);
         this.longitude = longitude;
     }
 
@@ -89,7 +97,7 @@ public class CoordinateVenus
     public void setEwIndicator(Character ewIndicator) {
         this.ewIndicator = ewIndicator;
     }
-
+    
     public Character getGpsQuality() {
         return gpsQuality;
     }
@@ -159,6 +167,7 @@ public class CoordinateVenus
     }
 
     public void setSpeedGPS(Double speedGPS) {
+        super.setSpeed(speedGPS);
         this.speedGPS = speedGPS;
     }
 
@@ -186,14 +195,40 @@ public class CoordinateVenus
         this.modeIndicator = modeIndicator;
     }
 
-    public Date getDate() {
-        return date;
+    public String getDate() {
+        return new SimpleDateFormat("dd/MM/yyyy").format(date);
+    }     
+    public void setDate(String date) {
+        super.setDate(date);
+        try {            
+            this.date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(super.getDate() +" "+super.getHour());            
+        } catch (ParseException ex) {
+            Logger.getLogger(CoordinateVenus.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-
-    public void setDate(Date date) {
+    
+    public Date getDateObject() {
+        return this.date;
+    }     
+    public void setDateObject(Date date) {        
         this.date = date;
+        super.setDate(new SimpleDateFormat("dd/MM/yyyy").format(date));
+        super.setHour(new SimpleDateFormat("HH:mm:ss").format(date));        
     }
-
+        
+    public String getHour() {
+        return new SimpleDateFormat("HH:mm:ss").format(date);
+    }     
+    public void setHour(String hour) {
+        super.setHour(hour);
+        try {            
+            this.date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(super.getDate() +" "+super.getHour());            
+        } catch (ParseException ex) {
+            Logger.getLogger(CoordinateVenus.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    
     
     /**
      * Mostra a distância entre a a coordenada (this) e a recebida pelo parâmetro em metros. 

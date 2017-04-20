@@ -25,6 +25,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.postgis.LineString;
 import org.postgis.Point;
 import org.postgis.Polygon;
+import satb.Util;
 
 /**Classe que fornece funções para os algoritmos de trajetórias semântica.
 * @author Marcel Tolentino Pinheiro de Oliveira
@@ -476,7 +477,7 @@ public class TrajectoryFuntions
      
     public void showTargetObject(TargetObject area, Coordinate c, Coordinate center, Coordinate c2, LineString l, Polygon area2) throws Exception
     {
-        String pathfile = "C:/Users/Marcel/Documents/Mestrado/";
+        String pathfile = Util.getCurrentRelativePath();
         String path = "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe";
                
         //Invoca o método de construção do KML

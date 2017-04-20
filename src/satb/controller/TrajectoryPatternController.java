@@ -16,6 +16,7 @@ import satb.model.dao.PastureDAO;
 import satb.model.dao.TrajectoryDAO;
 import satb.model.dao.TrajectoryPatternDAO;
 import org.postgis.Polygon;
+import satb.Util;
 
 /**Classe que representa a camada de controle para os Padrões de Trajetórias.
 * @author Marcel Tolentino Pinheiro de Oliveira.
@@ -35,7 +36,7 @@ public class TrajectoryPatternController
         kml = new KMLFunctions();
         functions = new TrajectoryFuntions();
         path = "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe";
-        pathkml = "C:/Users/Marcel/Documents/Mestrado/";
+        pathkml = Util.getCurrentRelativePath();
         this.targetObjects = FXCollections.observableArrayList();
         this.trajectories = FXCollections.observableArrayList();
     }

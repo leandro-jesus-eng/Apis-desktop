@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import javafx.collections.ObservableList;
 import javafx.stage.FileChooser;
+import satb.Util;
 import satb.controller.functions.KMLFunctions;
 import satb.model.Coordinate;
 import satb.model.dao.SeeTrackDAO;
@@ -23,7 +24,7 @@ public class SeeTrackController
     public SeeTrackController()
     {
         path = "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe";
-        pathkml = "C:/Users/Marcel/Documents/Mestrado/";
+        pathkml = Util.getCurrentRelativePath();
         kml = new KMLFunctions();
         fileChooser = new FileChooser();
     }

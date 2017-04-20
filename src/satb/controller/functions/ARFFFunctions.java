@@ -11,6 +11,7 @@ import javafx.collections.ObservableList;
 import jsat.ARFFLoader;
 import jsat.DataSet;
 import jsat.classifiers.DataPoint;
+import satb.Util;
 import satb.model.Coordinate;
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -24,7 +25,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 public class ARFFFunctions 
 {
     //Atributos
-    private String path = "C:/Users/Marcel/Documents/Mestrado/arff/";
+    private String path = Util.getCurrentRelativePath()+ File.separator  + "arff" + File.separator;
 
     /**Contrutor Default. */
     public ARFFFunctions(){}  
