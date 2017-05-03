@@ -3,11 +3,14 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/behavior/ActivityRecognition.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/view/ActivityRecognitionView.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/controller/ActivityRecognitionController.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/model/dao/CollarDataDAO.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/model/CoordinateVenus.java</file>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/controller/CollarDataController.java</file>
-            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/controller/functions/KMLFunctions.java</file>
-            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/controller/ClusteringController.java</file>
-            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/controller/SimulatorPointsController.java</file>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/behavior/WekaTest.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/view/CollarDataView.java</file>
         </group>
     </open-files>
 </project-private>
