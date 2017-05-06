@@ -211,6 +211,7 @@ public class ActivityRecognition implements Runnable {
                     Double acceleration = (mdsAnterior.getSpeed() - mds.getSpeed()) / differenceSeconds;
                     mds.setAcceleration(acceleration);
                     
+                    // TODO - isso tem valor? pegou de onde?
                     Double angle = mdsAnterior.getHeading()- mds.getHeading();
                     mds.setAngle(Math.abs(angle));
                     

@@ -18,7 +18,6 @@ import satb.model.dao.CollarDataDAO;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.postgis.Point;
 import satb.behavior.ActivityRecognition;
 import satb.behavior.Observation;
 import satb.behavior.Util;
@@ -512,9 +511,11 @@ public class CollarDataController {
 
                             if (split[0].equals("$GPGGA")) {
 
-                                if (gpsQuality != null && status != null && modeIndicator != null
-                                        && gpsQuality != '0' && status == 'A' && modeIndicator != 'N') {
-
+                                //if (gpsQuality != null && status != null && modeIndicator != null
+                                //        && gpsQuality != '0' && status == 'A' && modeIndicator != 'N') {
+                                    
+                                if (latitude != null) {
+                                    
                                     //if(ponto != null)
                                     //    collarDataDAO.insertDataVenus(collar, ponto);
                                         
@@ -573,25 +574,25 @@ public class CollarDataController {
                                 nsIndicator = split[3].charAt(0);
                                 longitude = Double.parseDouble(split[4]);
                                 ewIndicator = split[5].charAt(0);
-                                gpsQuality = split[6].charAt(0);
-                                satellitesUsed = Integer.parseInt(split[7]);
+                                // gpsQuality = split[6].charAt(0);
+                                // satellitesUsed = Integer.parseInt(split[7]);
                                 //HDOP = Double.parseDouble(split[8]);
-                                altitude = Double.parseDouble(split[9]);
-                                differencialReferenceStationID = Integer.parseInt(split[14].split("\\*")[0]);
+                                // altitude = Double.parseDouble(split[9]);
+                                // differencialReferenceStationID = Integer.parseInt(split[14].split("\\*")[0]);
                             }
 
                             if (split[0].equals("$GPGSA")) {                                
-                                PDOP = Double.parseDouble(split[15]);
-                                HDOP = Double.parseDouble(split[16]);
-                                VDOP = Double.parseDouble(split[17].split("\\*")[0]);
+                                //PDOP = Double.parseDouble(split[15]);
+                                //HDOP = Double.parseDouble(split[16]);
+                                //VDOP = Double.parseDouble(split[17].split("\\*")[0]);
                             }
 
                             if (split[0].equals("$GPRMC")) {
-                                status = split[2].charAt(0);
+                                //status = split[2].charAt(0);
                                 //speedGPS = Double.parseDouble(split[7]);
                                 course = Double.parseDouble(split[8]);
                                 utcDate = split[9].trim();
-                                modeIndicator = split[12].split("\\*")[0].charAt(0);
+                                //modeIndicator = split[12].split("\\*")[0].charAt(0);
                             }
 
                             if (split[0].equals("$GPVTG")) {
@@ -600,9 +601,12 @@ public class CollarDataController {
                         }
                     } catch (Exception e) {
                         
+                        //e.printStackTrace();
                         gpsQuality = null;
                         status = null;
                         modeIndicator = null;
+                        
+                        latitude = null;
                         
                     }
                 } // end while
@@ -668,7 +672,7 @@ public class CollarDataController {
                         //se a linha possui caracteres
                         if (line.length() > 0) {
                             
-                            String[] split = line.split(";");
+                            String[] split = line.split(",");
 
                             if(split.length > 2) {
                                 data = new SimpleDateFormat("HHmmss ddMMyyyy").parse(split[0]+" "+split[1]);  
