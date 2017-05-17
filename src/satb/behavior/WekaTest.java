@@ -168,8 +168,7 @@ public class WekaTest {
     
     public Double go2(Instances data, String message) throws Exception {
         
-        data.setClassIndex(data.numAttributes() - 1);
-        
+        //data.setClassIndex(data.numAttributes() - 1);
         
         Resample filter = new Resample();
         filter.setBiasToUniformClass(1.0);
@@ -185,11 +184,12 @@ public class WekaTest {
                                     new weka.classifiers.trees.RandomForest(),
                                     new J48(),
                                     new weka.classifiers.functions.MultilayerPerceptron(),
-                                    new weka.classifiers.lazy.KStar(),                                    
-                                    new weka.classifiers.rules.ZeroR(),
+                                    new weka.classifiers.lazy.KStar()                                                                        
                                     };
         
         //Classifier[] models = { new weka.classifiers.meta.END() };
+        
+        //Classifier[] models = {     new weka.classifiers.functions.SMO() };
         
         Double maxCorrect = 0.0;
         // Run for each classifier model

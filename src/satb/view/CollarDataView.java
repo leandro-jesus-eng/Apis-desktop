@@ -40,7 +40,7 @@ public class CollarDataView
     {
         controller = new CollarDataController();
         
-        comboTypeSource = new ComboBox<>(FXCollections.observableArrayList ("ARFF", "OTAG", "OTAG2nd", "Venus 0010", "Venus 00A1"));
+        comboTypeSource = new ComboBox<>(FXCollections.observableArrayList ("ARFF", "OTAG", "OTAG2nd", "Venus 0010", "Venus Lomba"));
         comboTypeSource.setPrefWidth(80);
         comboTypeSource.setPromptText("Selecione");
         
@@ -95,8 +95,8 @@ public class CollarDataView
                         controller.readTxtVenus("0010");
                         break;
                         
-                    case "Venus 00A1":
-                        controller.readTxtVenusLomba("00A1");
+                    case "Venus Lomba":
+                        controller.readTxtVenusLomba(null);
                         break;
 
                         

@@ -18,4 +18,14 @@ public class Util {
         return Paths.get("").toAbsolutePath().normalize().toString() + File.separator;
     }
     
+    public static String toNullSQL (Object o) {
+        if(o == null)
+            return "null";
+        
+        if(o instanceof Character)
+            return "'"+o+"'";
+        
+        return o.toString();
+    }
+    
 }

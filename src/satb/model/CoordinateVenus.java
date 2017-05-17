@@ -49,6 +49,17 @@ public class CoordinateVenus extends Coordinate
     private Character modeIndicator = null;
     
     
+    private Double ldr;
+    private Double ax;
+    private Double ay;
+    private Double az;
+    private Double gx;
+    private Double gy;
+    private Double gz;
+    private Double mx;
+    private Double my;
+    private Double mz;
+    
     
     /**Construtor Default. */
     public CoordinateVenus()
@@ -227,6 +238,89 @@ public class CoordinateVenus extends Coordinate
             Logger.getLogger(CoordinateVenus.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    public Double getLdr() {
+        return ldr;
+    }
+
+    public void setLdr(Double ldr) {
+        this.ldr = ldr;
+    }
+
+    public Double getAx() {
+        return ax;
+    }
+
+    public void setAx(Double ax) {
+        this.ax = ax;
+    }
+
+    public Double getAy() {
+        return ay;
+    }
+
+    public void setAy(Double ay) {
+        this.ay = ay;
+    }
+
+    public Double getAz() {
+        return az;
+    }
+
+    public void setAz(Double az) {
+        this.az = az;
+    }
+
+    public Double getGx() {
+        return gx;
+    }
+
+    public void setGx(Double gx) {
+        this.gx = gx;
+    }
+
+    public Double getGy() {
+        return gy;
+    }
+
+    public void setGy(Double gy) {
+        this.gy = gy;
+    }
+
+    public Double getGz() {
+        return gz;
+    }
+
+    public void setGz(Double gz) {
+        this.gz = gz;
+    }
+
+    public Double getMx() {
+        return mx;
+    }
+
+    public void setMx(Double mx) {
+        this.mx = mx;
+    }
+
+    public Double getMy() {
+        return my;
+    }
+
+    public void setMy(Double my) {
+        this.my = my;
+    }
+
+    public Double getMz() {
+        return mz;
+    }
+
+    public void setMz(Double mz) {
+        this.mz = mz;
+    }
+    
+    
+    
     
     
     

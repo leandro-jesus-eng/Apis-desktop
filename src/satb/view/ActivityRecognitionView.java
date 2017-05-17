@@ -45,7 +45,10 @@ public class ActivityRecognitionView
     private final Label infoLabel = new Label ("Treinar classificador");
     
     //Botão
-    private Button execute = new Button("Executar");    
+    private Button execute = new Button("trainClassifier");    
+    private Button executeParametros = new Button("trainClassifierParametros");    
+    private Button executeLomba = new Button("trainClassifierLomba");    
+    
     private Button cancel = new Button("Cancelar");
     
     
@@ -76,6 +79,8 @@ public class ActivityRecognitionView
         
         cancel.setId("cancelbutton");
         execute.setId("addbutton");   
+        executeParametros.setId("addbutton");   
+        executeLomba.setId("addbutton");   
         infoLabel.setId("label-title");
     }
     
@@ -114,7 +119,7 @@ public class ActivityRecognitionView
               
        grid.add(trajecHBox.buttonsLine(execute, cancel), 0, 6);
         
-       //Função que executa o algoritmo com os parâmetros escolhidos
+       //Função que executa o algoritmo SEM os parâmetros escolhidos
        execute.setOnAction(new EventHandler<ActionEvent>() 
        {
             @Override
@@ -122,7 +127,24 @@ public class ActivityRecognitionView
             {
               try
               {
-                  
+                    new ActivityRecognitionController().trainClassifier();
+              }
+              catch (Exception ex) 
+              {
+                    Logger.getLogger(ActivityRecognitionView.class.getName()).log(Level.SEVERE, null, ex);
+              }     
+           }
+        });
+       
+       
+       //Função que executa o algoritmo com os parâmetros escolhidos
+       executeParametros.setOnAction(new EventHandler<ActionEvent>() 
+       {
+            @Override
+            public void handle(ActionEvent e) 
+            {
+              try
+              {
                     Integer degreesForSameDirectionA = Integer.valueOf( degreesForSameDirectionFieldA.getText() );
                     Integer historyLengthA = Integer.valueOf( historyLengthFieldA.getText() );
                     Double minSpeedA = Double.valueOf( minSpeedFieldA.getText() );
@@ -133,9 +155,6 @@ public class ActivityRecognitionView
                     Double minSpeedB = Double.valueOf( minSpeedFieldB.getText() );
                     Double segmentSecondsB = Double.valueOf( segmentSecondsFieldB.getText() );
                   
-                    
-                    //new ActivityRecognitionController().trainClassifier();
-                    
                     new ActivityRecognitionController().trainClassifier(degreesForSameDirectionA, historyLengthA, minSpeedA, segmentSecondsA,
                         degreesForSameDirectionB, historyLengthB, minSpeedB, segmentSecondsB);
                     /*if(comboPattern.getValue() != null && comboPasture.getValue() != null && comboCollar.getValue() != null)
@@ -149,6 +168,30 @@ public class ActivityRecognitionView
               }     
            }
         });
+       
+       
+       //Função que executa o algoritmo com os parâmetros escolhidos
+       executeLomba.setOnAction(new EventHandler<ActionEvent>() 
+       {
+            @Override
+            public void handle(ActionEvent e) 
+            {
+              try
+              {
+                    new ActivityRecognitionController().trainClassifierLomba();
+                    /*if(comboPattern.getValue() != null && comboPasture.getValue() != null && comboCollar.getValue() != null)
+                    {   
+                        showPattern();
+                    }*/
+              }
+              catch (Exception ex) 
+              {
+                    Logger.getLogger(ActivityRecognitionView.class.getName()).log(Level.SEVERE, null, ex);
+              }     
+           }
+        });
+       
+       grid.add(trajecHBox.buttonsLine(executeParametros, executeLomba), 0, 8);
        
         //Fecha a janela e cancela as funções 
         cancel.setOnAction(new EventHandler<ActionEvent>() 

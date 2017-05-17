@@ -39,7 +39,7 @@ public class ActivityRecognition implements Runnable {
 
     private LinkedList<CoordinateVenus> listCoordinate;
     private LinkedList<Observation> listObservations;
-    
+
     LinkedList<MovementDataStructure> listMDS = null;
     
     Integer degreesForSameDirection = 40;
@@ -60,6 +60,10 @@ public class ActivityRecognition implements Runnable {
     
     LinkedList<String> observationsTypes = new LinkedList<>();
     
+    
+    public ActivityRecognition() {
+    }
+    
     public ActivityRecognition(LinkedList<CoordinateVenus> listCoordinate, LinkedList<Observation> listObservations) throws Exception {
         this.listCoordinate = listCoordinate;
         this.listObservations = listObservations;
@@ -69,7 +73,7 @@ public class ActivityRecognition implements Runnable {
             configurationPrint += "historyLength \t\t="+this.historyLength +"\n";
             configurationPrint += "segmentSeconds \t\t="+this.segmentSeconds +"\n";
 
-        LinkedList<MovementDataStructure> listMDS = doMovementAnalyzer( listCoordinate );        
+        LinkedList<MovementDataStructure> listMDS = doMovementAnalyzer();        
         LinkedList<SegmentDataStructure> listSDS = doSegmentAnalyzer( listMDS );        
         LinkedList<ActivityDataStructure> listADS = doActivityAnalyzer( listSDS );        
         WekaTest wt = new WekaTest();
@@ -100,7 +104,7 @@ public class ActivityRecognition implements Runnable {
             for( this.historyLength = historyLengthA;  this.historyLength <= historyLengthB; this.historyLength +=1) {
                 for( this.degreesForSameDirection = degreesForSameDirectionA; this.degreesForSameDirection<=degreesForSameDirectionB; this.degreesForSameDirection +=10 ) {// heading threshold
 
-                    LinkedList<MovementDataStructure> listMDS = doMovementAnalyzer( listCoordinate );
+                    LinkedList<MovementDataStructure> listMDS = doMovementAnalyzer();
 
                     for(this.segmentSeconds = segmentSecondsA; this.segmentSeconds <= segmentSecondsB; this.segmentSeconds +=10 ) {
 
@@ -158,7 +162,7 @@ public class ActivityRecognition implements Runnable {
             configurationPrint += "segmentSeconds \t\t="+this.segmentSeconds +"\n";
 
         if(this.listMDS == null) {
-            this.listMDS = doMovementAnalyzer( listCoordinate );        
+            this.listMDS = doMovementAnalyzer();        
         }
         LinkedList<SegmentDataStructure> listSDS = doSegmentAnalyzer( this.listMDS );        
         LinkedList<ActivityDataStructure> listADS = doActivityAnalyzer( listSDS );       
@@ -182,7 +186,7 @@ public class ActivityRecognition implements Runnable {
     
     
 
-    public LinkedList<MovementDataStructure> doMovementAnalyzer(LinkedList<CoordinateVenus> listCoordinate) {        
+    public LinkedList<MovementDataStructure> doMovementAnalyzer() {        
         
         
 
@@ -205,12 +209,13 @@ public class ActivityRecognition implements Runnable {
                     Double distancia = atual.distance(anterior);
                     mds.setMagnitude(distancia);                    
                     Double differenceSeconds = (anterior.getDateObject().getTime() - atual.getDateObject().getTime()) / 1000.0;
-                    //mds.setSpeed(distancia/differenceSeconds);
+                    mds.setSpeed(distancia/differenceSeconds);
                     
                     // calculo da aceleracao =  delta V / delta t
                     Double acceleration = (mdsAnterior.getSpeed() - mds.getSpeed()) / differenceSeconds;
                     mds.setAcceleration(acceleration);
                     
+                    // TODO - isso tem valor? pegou de onde?
                     Double angle = mdsAnterior.getHeading()- mds.getHeading();
                     mds.setAngle(Math.abs(angle));
                     
@@ -714,6 +719,8 @@ public class ActivityRecognition implements Runnable {
         
         LinkedList<ActivityDataStructure> listADS = new LinkedList<>();
         
+        Integer lastIntersecs = 0;
+        
         for(SegmentDataStructure sds : listSDS) {
             Long begin = sds.getListMDS().getFirst().getCoordinatePoint().getDateObject().getTime() + sincCoordinateObservationSeconds*1000;
             Long end = sds.getListMDS().getLast().getCoordinatePoint().getDateObject().getTime() + sincCoordinateObservationSeconds*1000;
@@ -724,7 +731,7 @@ public class ActivityRecognition implements Runnable {
             }
             
             //String observation = getObservationIntersecs(begin, end);
-            ObservationTime ot = getObservationIntersecs(begin, end);
+            ObservationTime ot = getObservationIntersecs(begin, end, lastIntersecs);
             
             //if(observation != null) {
             if(ot != null) {
@@ -772,12 +779,12 @@ public class ActivityRecognition implements Runnable {
         return listADS;
     }
     
-    protected ObservationTime getObservationIntersecs(Long beginSegment, Long endSegment) {
+    protected ObservationTime getObservationIntersecs(Long beginSegment, Long endSegment, Integer lastIntersecs) {
         
         Map<String, ObservationTime> mapObservationsIntersec = new HashMap();
         Long tempoObservacao = 0L;
         
-        for(int i=0 ; i < listObservations.size() ; i++) {
+        for(int i=lastIntersecs ; i < listObservations.size() ; i++) {
             Observation observationObject = listObservations.get(i);
             Long beginObservation = observationObject.getData().getTime();
             Long endObservation;
@@ -797,9 +804,10 @@ public class ActivityRecognition implements Runnable {
                 break;
             
 
-            //                      |    segment   |
+            //                      |    segment ...  
             //    |     observation     |
-            if(beginObservation <= beginSegment && endObservation > beginSegment ) {
+            if(beginObservation <= beginSegment && endObservation > beginSegment ) {                
+                lastIntersecs = i;
                 
                 // se o segmento está dentro da observação
                 //                      |    segment   |
@@ -808,7 +816,7 @@ public class ActivityRecognition implements Runnable {
                     ObservationTime ot = new ObservationTime();
                     ot.observation = observationObject;
                     //ot.timeAcumulated = new Long(tempoObservacao.longValue());
-                    ot.timeAcumulated = endSegment - beginSegment;
+                    ot.timeAcumulated = endSegment - beginSegment;                    
                     return ot;
                     //return observation;
                     
@@ -822,6 +830,7 @@ public class ActivityRecognition implements Runnable {
             //    |       segment      |
             //        | observation  |
             if(beginSegment <= beginObservation && endObservation <= endSegment) {
+                lastIntersecs = i;
                 tempoObservacao = endObservation - beginObservation;
             }
             
@@ -829,6 +838,7 @@ public class ActivityRecognition implements Runnable {
             //        | observation       |
             if(beginObservation >= beginSegment //&& beginObservation < endSegment
                     && endObservation > endSegment) {
+                lastIntersecs = i;
                 tempoObservacao = endSegment - beginObservation;
             }
             
@@ -1053,7 +1063,7 @@ public class ActivityRecognition implements Runnable {
     
     
     /**Cria um arquivo no formato ARFF.*/  
-    public void createARFF(Instances data, String filename)
+    public static void createARFF(Instances data, String filename)
     {
         //Criação e escrita de um arquivo
         FileWriter fileWriter = null;
@@ -1204,6 +1214,24 @@ public class ActivityRecognition implements Runnable {
             data.add(new Instance(1.0, vals)); 
         }
         
+        data.setClassIndex(data.numAttributes() - 1);
+        
         return data;
+    }
+    
+    public LinkedList<CoordinateVenus> getListCoordinate() {
+        return listCoordinate;
+    }
+
+    public void setListCoordinate(LinkedList<CoordinateVenus> listCoordinate) {
+        this.listCoordinate = listCoordinate;
+    }
+
+    public LinkedList<Observation> getListObservations() {
+        return listObservations;
+    }
+
+    public void setListObservations(LinkedList<Observation> listObservations) {
+        this.listObservations = listObservations;
     }
 }
