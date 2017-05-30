@@ -183,8 +183,8 @@ public class WekaTest {
                                     new weka.classifiers.meta.ClassificationViaRegression(),
                                     new weka.classifiers.trees.RandomForest(),
                                     new J48(),
-                                    new weka.classifiers.functions.MultilayerPerceptron(),
-                                    new weka.classifiers.lazy.KStar()                                                                        
+                                    new weka.classifiers.functions.MultilayerPerceptron()
+                                    //new weka.classifiers.lazy.KStar()                                                                        
                                     };
         
         //Classifier[] models = { new weka.classifiers.meta.END() };

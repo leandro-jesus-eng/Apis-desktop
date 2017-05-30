@@ -178,7 +178,18 @@ public class ActivityRecognitionView
             {
               try
               {
-                    new ActivityRecognitionController().trainClassifierLomba();
+                    Integer degreesForSameDirectionA = Integer.valueOf( degreesForSameDirectionFieldA.getText() );
+                    Integer historyLengthA = Integer.valueOf( historyLengthFieldA.getText() );
+                    Double minSpeedA = Double.valueOf( minSpeedFieldA.getText() );
+                    Double segmentSecondsA = Double.valueOf( segmentSecondsFieldA.getText() );
+        
+                    Integer degreesForSameDirectionB = Integer.valueOf( degreesForSameDirectionFieldB.getText() );
+                    Integer historyLengthB = Integer.valueOf( historyLengthFieldB.getText() );
+                    Double minSpeedB = Double.valueOf( minSpeedFieldB.getText() );
+                    Double segmentSecondsB = Double.valueOf( segmentSecondsFieldB.getText() );
+                  
+                    new ActivityRecognitionController().trainClassifierLomba(degreesForSameDirectionA, historyLengthA, minSpeedA, segmentSecondsA,
+                        degreesForSameDirectionB, historyLengthB, minSpeedB, segmentSecondsB);
                     /*if(comboPattern.getValue() != null && comboPasture.getValue() != null && comboCollar.getValue() != null)
                     {   
                         showPattern();

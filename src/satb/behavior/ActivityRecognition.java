@@ -42,13 +42,13 @@ public class ActivityRecognition implements Runnable {
 
     LinkedList<MovementDataStructure> listMDS = null;
     
-    Integer degreesForSameDirection = 40;
-    Integer historyLength = 9;
-    Double minSpeed = 0.2;
-    Double likelihoodNonmovingUnder = 0.1;
-    Double likelihoodNonmovingOver = 0.6;
+    public Integer degreesForSameDirection = 40;
+    public Integer historyLength = 9;
+    public Double minSpeed = 0.2;
+    public Double likelihoodNonmovingUnder = 0.1;
+    public Double likelihoodNonmovingOver = 0.6;
     
-    Double segmentSeconds = 160.0;
+    public Double segmentSeconds = 160.0;
     
     Integer sincCoordinateObservationSeconds = 0;
     
