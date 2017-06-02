@@ -23,36 +23,33 @@ import weka.core.Instances;
  *
  * @author Leandro
  */
-public class ActivityRecognitionController {
+public class ActivityRecognitionController implements Runnable {
 
     CollarDataDAO collarDataDAO;
 
-    private Hashtable<String, LinkedList<CoordinateVenus>> hashCoordinateCollar = new Hashtable(15);
-    private Hashtable<String, LinkedList<Observation>> hashObservationCollar = new Hashtable(15);
+    static private Hashtable<String, LinkedList<CoordinateVenus>> hashCoordinateCollar = new Hashtable(15);
+    static private Hashtable<String, LinkedList<Observation>> hashObservationCollar = new Hashtable(15);
+
+    private ActivityRecognition activityRecognition;
+    volatile static Integer countActivityRecognitionRunnable = 0;
+    static Double maxCorrectAll = 0.0;
 
     public ActivityRecognitionController() {
         collarDataDAO = new CollarDataDAO();
     }
 
+    public ActivityRecognitionController(ActivityRecognition ar) {        
+        this();
+        this.activityRecognition = ar;
+    }
+
     public void trainClassifier() {
 
-        long tempoInicial = System.currentTimeMillis();
-
         LinkedList<CoordinateVenus> listCoordinate = collarDataDAO.selectAllDataVenus();
-
-        System.out.println("listCoordinate (millis) = " + (System.currentTimeMillis() - tempoInicial));
-        tempoInicial = System.currentTimeMillis();
-
         LinkedList<Observation> listObservations = collarDataDAO.selectAllObservation();
 
-        System.out.println("listObservations (millis) = " + (System.currentTimeMillis() - tempoInicial));
-        tempoInicial = System.currentTimeMillis();
-
         try {
-
             new ActivityRecognition(listCoordinate, listObservations);
-
-            System.out.println("ActivityRecognition (millis) = " + (System.currentTimeMillis() - tempoInicial));
         } catch (Exception ex) {
             Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -65,9 +62,8 @@ public class ActivityRecognitionController {
         LinkedList<Observation> listObservations = collarDataDAO.selectAllObservation();
 
         try {
-
-            new ActivityRecognition(listCoordinate, listObservations, degreesForSameDirectionA, degreesForSameDirectionB, historyLengthA, historyLengthB, minSpeedA, minSpeedB, segmentSecondsA, segmentSecondsB);
-
+            new ActivityRecognition(listCoordinate, listObservations, degreesForSameDirectionA, degreesForSameDirectionB, 
+                    historyLengthA, historyLengthB, minSpeedA, minSpeedB, segmentSecondsA, segmentSecondsB);
         } catch (Exception ex) {
             Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -76,77 +72,110 @@ public class ActivityRecognitionController {
     public void trainClassifierLomba(Integer degreesForSameDirectionA, Integer historyLengthA, Double minSpeedA, Double segmentSecondsA,
             Integer degreesForSameDirectionB, Integer historyLengthB, Double minSpeedB, Double segmentSecondsB) {
 
-        ActivityRecognition ar = new ActivityRecognition();
-
+        Double minSpeed;
+        Integer historyLength;
+        Integer degreesForSameDirection;
+        Double segmentSeconds;
+        
         boolean cont = true;
+        Integer countRunnable = 0;
 
-        for (ar.minSpeed = minSpeedA; ar.minSpeed <= minSpeedB; ar.minSpeed += 0.1) {
-            for (ar.historyLength = historyLengthA; ar.historyLength <= historyLengthB; ar.historyLength += 1) {
-                for (ar.degreesForSameDirection = degreesForSameDirectionA; ar.degreesForSameDirection <= degreesForSameDirectionB; ar.degreesForSameDirection += 10) {// heading threshold
-                    for (ar.segmentSeconds = segmentSecondsA; ar.segmentSeconds <= segmentSecondsB; ar.segmentSeconds += 10) {
+        for (minSpeed = minSpeedA; minSpeed <= minSpeedB; minSpeed += 0.1) {
+            for (historyLength = historyLengthA; historyLength <= historyLengthB; historyLength += 1) {
+                for (degreesForSameDirection = degreesForSameDirectionA; degreesForSameDirection <= degreesForSameDirectionB; degreesForSameDirection += 10) {
+                    for (segmentSeconds = segmentSecondsA; segmentSeconds <= segmentSecondsB; segmentSeconds += 10) {
 
                         if (cont) {
-                            ar.minSpeed = 0.1;
-                            ar.degreesForSameDirection = 40;
-                            ar.historyLength = 4;
-                            ar.segmentSeconds = 160.0;
+                            minSpeed = 0.4;
+                            //ar.degreesForSameDirection = 40;
+                            //ar.historyLength = 4;
+                            //ar.segmentSeconds = 160.0;
                             cont = false;
                         }
 
-                        System.out.println("minSpeed \t\t=" + ar.minSpeed);
-                        System.out.println("degreesForSameDirection \t\t=" + ar.degreesForSameDirection);
-                        System.out.println("historyLength \t\t=" + ar.historyLength);
-                        System.out.println("segmentSeconds \t\t=" + ar.segmentSeconds);
+                        while (countActivityRecognitionRunnable > 6) {
+                            synchronized (this)  {
+                                try { this.wait(); } catch (InterruptedException ex) {
+                                    Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                        }
 
-                        //LinkedList<CoordinateVenus> listCoordinate;
-                        //LinkedList<Observation> listObservations;        
-                        LinkedList<ActivityDataStructure> listADS = new LinkedList<>();
+                        countActivityRecognitionRunnable++;
+                        ActivityRecognition arThread = new ActivityRecognition();
+                        arThread.minSpeed = minSpeed;
+                        arThread.historyLength = historyLength;
+                        arThread.degreesForSameDirection = degreesForSameDirection;
+                        arThread.segmentSeconds = segmentSeconds;
+                        ActivityRecognitionController activityRecognitionController = new ActivityRecognitionController(arThread);
+                        Thread t = new Thread(activityRecognitionController);
+                        t.setName(t.getName() + "-activityRecognitionController-" + (countRunnable++) + "-" + countActivityRecognitionRunnable);
+                        t.start();
+                    }
+                }
+            }
+        }
 
-                        String collar;
+        // espera todas as threads
+        while (countActivityRecognitionRunnable > 0) {
+            synchronized (this)  {
+                try { this.wait(); } catch (InterruptedException ex) {
+                    Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
 
-                        collar = "00A2";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        System.out.println("====================================================================================");
+        System.out.println("====================================================================================");
+        System.out.println("maxCorrect \t\t=" + maxCorrectAll);
+    }
+    
+   
+    @Override
+    public void run() {
 
-                        collar = "00A3";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        String configurationPrint = "minSpeed \t\t=" + this.activityRecognition.minSpeed + "\n";
+        configurationPrint += "degreesForSameDirection \t\t=" + this.activityRecognition.degreesForSameDirection + "\n";
+        configurationPrint += "historyLength \t\t=" + this.activityRecognition.historyLength + "\n";
+        configurationPrint += "segmentSeconds \t\t=" + this.activityRecognition.segmentSeconds + "\n";
 
-                        collar = "00B2";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        LinkedList<ActivityDataStructure> listADS = new LinkedList<>();
 
-                        collar = "00B3";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        String collar;
 
-                        collar = "00C3";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        collar = "00A2";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
 
-                        collar = "00C4";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        collar = "00A3";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
 
-                        collar = "00D1";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        collar = "00B2";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
 
-                        collar = "00D2";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        collar = "00B3";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
 
-                        collar = "00D3";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        collar = "00C3";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
 
-                        collar = "00D4";
-                        System.out.println(collar);
-                        listADS.addAll(createActivityDataStructureCollar(collar, ar));
+        collar = "00C4";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
 
-                        Instances data = ar.createARFFData(listADS);
+        collar = "00D1";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
 
-                        /*for(int i=0; i<data.numInstances(); i++) {
+        collar = "00D2";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
+
+        collar = "00D3";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
+
+        collar = "00D4";
+        listADS.addAll(createActivityDataStructureCollar(collar, this.activityRecognition));
+
+        Instances data = this.activityRecognition.createARFFData(listADS);
+
+        /*for(int i=0; i<data.numInstances(); i++) {
                          if ( data.instance(i).stringValue( data.classAttribute() ).equals("Bebendo") ) {
                          data.instance(i).setClassValue("BebendoÁgua");
                          }                       
@@ -154,17 +183,21 @@ public class ActivityRecognitionController {
                          data.instance(i).setClassValue("Deitado");
                          }            
                          }*/
-                        WekaTest wt = new WekaTest();
-                        try {
-                            wt.go2(data, "configuração padrão classe");
-                        } catch (Exception ex) {
-                            Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-
-                    }
-                }
+        WekaTest wt = new WekaTest();
+        try {
+            Double maxCorrect = wt.go2(data, configurationPrint);
+            if (maxCorrect > maxCorrectAll) {
+                maxCorrectAll = maxCorrect;
             }
+            countActivityRecognitionRunnable--;
+        } catch (Exception ex) {
+            Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        synchronized (this) {
+            notify();
+        }
+
     }
 
     protected LinkedList<ActivityDataStructure> createActivityDataStructureCollar(String collar, ActivityRecognition ar) {
@@ -174,18 +207,20 @@ public class ActivityRecognitionController {
 
         try {
 
-            if (hashCoordinateCollar.containsKey(collar)) {
-                listCoordinate = hashCoordinateCollar.get(collar);
-            } else {
-                listCoordinate = collarDataDAO.selectDataVenus(collar);
-                hashCoordinateCollar.put(collar, listCoordinate);
-            }
+            synchronized (this) {
+                if (hashCoordinateCollar.containsKey(collar)) {
+                    listCoordinate = hashCoordinateCollar.get(collar);
+                } else {
+                    listCoordinate = collarDataDAO.selectDataVenus(collar);
+                    hashCoordinateCollar.put(collar, listCoordinate);
+                }
 
-            if (hashObservationCollar.containsKey(collar)) {
-                listObservations = hashObservationCollar.get(collar);
-            } else {
-                listObservations = collarDataDAO.selectObservation(collar);
-                hashObservationCollar.put(collar, listObservations);
+                if (hashObservationCollar.containsKey(collar)) {
+                    listObservations = hashObservationCollar.get(collar);
+                } else {
+                    listObservations = collarDataDAO.selectObservation(collar);
+                    hashObservationCollar.put(collar, listObservations);
+                }
             }
 
             ar.setListCoordinate(listCoordinate);
