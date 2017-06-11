@@ -187,7 +187,7 @@ public class WekaTest {
                                     //new weka.classifiers.lazy.KStar()                                                                        
                                     };
         
-        //Classifier[] models = { new weka.classifiers.meta.END() };
+        //Classifier[] models = { new weka.classifiers.trees.RandomForest() };
         
         //Classifier[] models = {     new weka.classifiers.functions.SMO() };
         
@@ -205,17 +205,20 @@ public class WekaTest {
                 maxCorrect = 100 * eval.correct() / ( eval.correct()+eval.incorrect() );
             }
             
-            synchronized (this) {
-                System.out.println("--------------------"+models[j].getClass().getSimpleName()+"---------------------------------");
-                System.out.println( message );
-                System.out.println(eval.toSummaryString());
-                System.out.println(eval.toClassDetailsString());
-                System.out.println(eval.toMatrixString());            
-                System.out.println("\nTempo de Execução (segundos) = "+((System.currentTimeMillis()-tempo)/1000.0) );
-                System.out.println("---------------------------------------------------------------------------------------------");
-            }
+            String printMessage = "--------------------"+models[j].getClass().getSimpleName()+"---------------------------------"+"\n"+
+                    message +"\n"+
+                    eval.toSummaryString()+"\n"+
+                    eval.toClassDetailsString()+"\n"+
+                    eval.toMatrixString()+"\n"+
+                    "\nTempo de Execução (segundos) = "+((System.currentTimeMillis()-tempo)/1000.0)+"\n"+
+                    "---------------------------------------------------------------------------------------------";                    
+            printMessage(printMessage);
         }
         
         return maxCorrect;
+    }
+    
+    private synchronized void printMessage (String message) {
+        System.out.println( message );
     }
 }

@@ -51,6 +51,8 @@ public class ActivityRecognitionView
     
     private Button cancel = new Button("Cancelar");
     
+    private ActivityRecognitionController activityRecognitionController;
+    
     
     /**Construtor. */
     public ActivityRecognitionView() throws Exception
@@ -82,6 +84,8 @@ public class ActivityRecognitionView
         executeParametros.setId("addbutton");   
         executeLomba.setId("addbutton");   
         infoLabel.setId("label-title");
+        
+        activityRecognitionController = new ActivityRecognitionController();
     }
     
     
@@ -188,7 +192,7 @@ public class ActivityRecognitionView
                     Double minSpeedB = Double.valueOf( minSpeedFieldB.getText() );
                     Double segmentSecondsB = Double.valueOf( segmentSecondsFieldB.getText() );
                   
-                    new ActivityRecognitionController().trainClassifierLomba(degreesForSameDirectionA, historyLengthA, minSpeedA, segmentSecondsA,
+                    activityRecognitionController.trainClassifierLomba(degreesForSameDirectionA, historyLengthA, minSpeedA, segmentSecondsA,
                         degreesForSameDirectionB, historyLengthB, minSpeedB, segmentSecondsB);
                     /*if(comboPattern.getValue() != null && comboPasture.getValue() != null && comboCollar.getValue() != null)
                     {   

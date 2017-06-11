@@ -77,8 +77,11 @@ public class ActivityRecognitionController implements Runnable {
         Integer degreesForSameDirection;
         Double segmentSeconds;
         
-        boolean cont = true;
+        boolean cont = false;
         Integer countRunnable = 0;
+        
+        countActivityRecognitionRunnable = 0;
+        maxCorrectAll = 0.0;
 
         for (minSpeed = minSpeedA; minSpeed <= minSpeedB; minSpeed += 0.1) {
             for (historyLength = historyLengthA; historyLength <= historyLengthB; historyLength += 1) {
@@ -86,20 +89,15 @@ public class ActivityRecognitionController implements Runnable {
                     for (segmentSeconds = segmentSecondsA; segmentSeconds <= segmentSecondsB; segmentSeconds += 10) {
 
                         if (cont) {
-                            minSpeed = 0.4;
-                            //ar.degreesForSameDirection = 40;
-                            //ar.historyLength = 4;
-                            //ar.segmentSeconds = 160.0;
+                            minSpeed = 0.3;
+                            degreesForSameDirection = 40;
+                            historyLength = 9;
+                            segmentSeconds = 110.0;
+                            
                             cont = false;
                         }
 
-                        while (countActivityRecognitionRunnable > 6) {
-                            synchronized (this)  {
-                                try { this.wait(); } catch (InterruptedException ex) {
-                                    Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }
-                        }
+                        while (countActivityRecognitionRunnable > 6);
 
                         countActivityRecognitionRunnable++;
                         ActivityRecognition arThread = new ActivityRecognition();
@@ -117,13 +115,7 @@ public class ActivityRecognitionController implements Runnable {
         }
 
         // espera todas as threads
-        while (countActivityRecognitionRunnable > 0) {
-            synchronized (this)  {
-                try { this.wait(); } catch (InterruptedException ex) {
-                    Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
+        while (countActivityRecognitionRunnable > 0);
 
         System.out.println("====================================================================================");
         System.out.println("====================================================================================");
@@ -175,14 +167,20 @@ public class ActivityRecognitionController implements Runnable {
 
         Instances data = this.activityRecognition.createARFFData(listADS);
 
-        /*for(int i=0; i<data.numInstances(); i++) {
-                         if ( data.instance(i).stringValue( data.classAttribute() ).equals("Bebendo") ) {
-                         data.instance(i).setClassValue("BebendoÁgua");
-                         }                       
-                         if ( data.instance(i).stringValue( data.classAttribute() ).equals("EmPe") ) {
-                         data.instance(i).setClassValue("Deitado");
-                         }            
-                         }*/
+        for(int i=0; i<data.numInstances(); i++) {                        
+            if ( data.instance(i).stringValue( data.classAttribute() ).equals("BebendoAgua") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                                
+            }                       
+            if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Ruminando") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
+            }    
+            if ( data.instance(i).stringValue( data.classAttribute() ).equals("EmPe-Ruminando") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
+            }
+            if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Parado") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
+            }            
+        }
         WekaTest wt = new WekaTest();
         try {
             Double maxCorrect = wt.go2(data, configurationPrint);
@@ -193,11 +191,6 @@ public class ActivityRecognitionController implements Runnable {
         } catch (Exception ex) {
             Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        synchronized (this) {
-            notify();
-        }
-
     }
 
     protected LinkedList<ActivityDataStructure> createActivityDataStructureCollar(String collar, ActivityRecognition ar) {
