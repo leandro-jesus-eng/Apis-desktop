@@ -330,7 +330,7 @@ public class CollarDataDAO
             stmt = base.getConnection().createStatement();
             
             ResultSet rs = stmt.executeQuery("SELECT \"time\", observation, collar\n" +
-                "	FROM public.observation;");                
+                "	FROM public.observation order by time;");                
 
             while (rs.next()) 
             {                
@@ -370,7 +370,7 @@ public class CollarDataDAO
             stmt = base.getConnection().createStatement();
             
             ResultSet rs = stmt.executeQuery("SELECT \"time\", observation, collar\n" +
-                "	FROM public.observation where collar = '"+collar+"';");                
+                "	FROM public.observation where collar = '"+collar+"' order by time;");                
 
             while (rs.next()) 
             {                

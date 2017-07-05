@@ -172,14 +172,14 @@ public class ActivityRecognitionController implements Runnable {
                 data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                                
             }                       
             if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Ruminando") ) {
-                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
+                data.instance(i).setValue(data.classAttribute(), "Deitado-Parado");                
             }    
             if ( data.instance(i).stringValue( data.classAttribute() ).equals("EmPe-Ruminando") ) {
                 data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
             }
-            if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Parado") ) {
+            /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Parado") ) {
                 data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
-            }            
+            } */           
         }
         WekaTest wt = new WekaTest();
         try {
