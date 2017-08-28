@@ -192,8 +192,10 @@ public class ActivityRecognitionView
                     Double minSpeedB = Double.valueOf( minSpeedFieldB.getText() );
                     Double segmentSecondsB = Double.valueOf( segmentSecondsFieldB.getText() );
                   
-                    activityRecognitionController.trainClassifierLomba(degreesForSameDirectionA, historyLengthA, minSpeedA, segmentSecondsA,
-                        degreesForSameDirectionB, historyLengthB, minSpeedB, segmentSecondsB);
+                    /*activityRecognitionController.trainClassifierLomba(degreesForSameDirectionA, historyLengthA, minSpeedA, segmentSecondsA,
+                        degreesForSameDirectionB, historyLengthB, minSpeedB, segmentSecondsB);*/
+                    
+                    activityRecognitionController.trainClassifierLomba();
                     /*if(comboPattern.getValue() != null && comboPasture.getValue() != null && comboCollar.getValue() != null)
                     {   
                         showPattern();

@@ -52,13 +52,13 @@ public class ActivityRecognition implements Runnable {
     
     Integer sincCoordinateObservationSeconds = 0;
     
-    String filenameARFF = "CowActivity.arff";
+    public static String filenameARFF = "CowActivity.arff";
     
     static Double maxCorrectAll = 0.0;
     
     volatile static Integer countActivityRecognitionRunnable = 0;
     
-    LinkedList<String> observationsTypes = new LinkedList<>();
+    public LinkedList<String> observationsTypes = new LinkedList<>();
     
     
     public ActivityRecognition() {
@@ -252,8 +252,7 @@ public class ActivityRecognition implements Runnable {
                         priorMoving = 1.0 - priorNonmoving;                        
                     }
                     Boolean isMoving = priorNonmoving < 0.5;                    
-                    
-                    
+                                        
                     if(isMoving) {
                         if(Math.abs(angle) <= degreesForSameDirection) {
                            mds.setMovimentType(FORWARD); 
@@ -269,6 +268,20 @@ public class ActivityRecognition implements Runnable {
                         }
                     } else {
                         mds.setMovimentType(NON_MOVING);
+                    }
+                    
+                    if(atual.getAx() != null && anterior.getAx() != null  ) {
+                        mds.setDeltaAx(atual.getAx() - anterior.getAx());
+                        mds.setDeltaAy(atual.getAy() - anterior.getAy());
+                        mds.setDeltaAz(atual.getAz() - anterior.getAz());
+                        mds.setDeltaGx(atual.getGx() - anterior.getGx());
+                        mds.setDeltaGy(atual.getGy() - anterior.getGy());
+                        mds.setDeltaGz(atual.getGz() - anterior.getGz());
+                        mds.setDeltaMx(atual.getMx() - anterior.getMx());
+                        mds.setDeltaMy(atual.getMy() - anterior.getMy());
+                        mds.setDeltaMz(atual.getMz() - anterior.getMz());
+                        
+                        mds.setLdr(atual.getLdr());
                     }
                     
                     antAnterior = anterior;
@@ -779,7 +792,7 @@ public class ActivityRecognition implements Runnable {
         return listADS;
     }
     
-    protected ObservationTime getObservationIntersecs(Long beginSegment, Long endSegment, Integer lastIntersecs) {
+    public ObservationTime getObservationIntersecs(Long beginSegment, Long endSegment, Integer lastIntersecs) {
         
         Map<String, ObservationTime> mapObservationsIntersec = new HashMap();
         Long tempoObservacao = 0L;
@@ -800,14 +813,14 @@ public class ActivityRecognition implements Runnable {
             
             //    |  segment    |
             //                           | observation  |
-            if( beginObservation > endObservation )
+            // if( beginObservation > endObservation )
+            if( beginObservation > endSegment )
                 break;
             
 
             //                      |    segment ...  
             //    |     observation     |
-            if(beginObservation <= beginSegment && endObservation > beginSegment ) {                
-                lastIntersecs = i;
+            if(beginObservation <= beginSegment && endObservation > beginSegment ) {                    
                 
                 // se o segmento está dentro da observação
                 //                      |    segment   |
@@ -817,6 +830,7 @@ public class ActivityRecognition implements Runnable {
                     ot.observation = observationObject;
                     //ot.timeAcumulated = new Long(tempoObservacao.longValue());
                     ot.timeAcumulated = endSegment - beginSegment;                    
+                    ot.lastIntersecs = i;
                     return ot;
                     //return observation;
                     
@@ -829,8 +843,7 @@ public class ActivityRecognition implements Runnable {
             
             //    |       segment      |
             //        | observation  |
-            if(beginSegment <= beginObservation && endObservation <= endSegment) {
-                lastIntersecs = i;
+            if(beginSegment <= beginObservation && endObservation <= endSegment) {                
                 tempoObservacao = endObservation - beginObservation;
             }
             
@@ -838,14 +851,14 @@ public class ActivityRecognition implements Runnable {
             //        | observation       |
             if(beginObservation >= beginSegment //&& beginObservation < endSegment
                     && endObservation > endSegment) {
-                lastIntersecs = i;
                 tempoObservacao = endSegment - beginObservation;
             }
             
             if(tempoObservacao > 0) {
                 if( mapObservationsIntersec.containsKey(observation) ) {
                     ObservationTime ot = mapObservationsIntersec.get(observation);                    
-                    ot.timeAcumulated = ot.timeAcumulated + tempoObservacao;                    
+                    ot.timeAcumulated = ot.timeAcumulated + tempoObservacao;
+                    ot.lastIntersecs = i;                    
                     mapObservationsIntersec.put(observation, ot); // acho q nem precisa, vai dar replace
                     
                     //Long tempo = mapObservationsIntersec.get(observation);
@@ -855,6 +868,7 @@ public class ActivityRecognition implements Runnable {
                     ObservationTime ot = new ObservationTime();
                     ot.observation = observationObject;
                     ot.timeAcumulated = new Long(tempoObservacao.longValue());
+                    ot.lastIntersecs = i;
                     mapObservationsIntersec.put(observation, ot);
                     //mapObservationsIntersec.put(observation, new Long(tempoObservacao.longValue()));
                 }
@@ -884,12 +898,7 @@ public class ActivityRecognition implements Runnable {
     }
 
     
-    class ObservationTime {
-        Observation observation;
-        Long timeAcumulated;        
-    } 
-    
-    protected int countMovementType (List<MovementDataStructure> listMDS, String movement ) {
+    public int countMovementType (List<MovementDataStructure> listMDS, String movement ) {
         int quantidade = 0;
         for(MovementDataStructure mds : listMDS) {
             if(mds.getMovimentType().equals(movement))
@@ -1218,6 +1227,81 @@ public class ActivityRecognition implements Runnable {
         
         return data;
     }
+    
+    
+    public Instances createARFFDataFromMDS(LinkedList<MovementDataStructure> listMDSClassification)
+    {
+        FastVector atts;
+        Instances data;
+        double[] vals;
+
+        // 1. Definir os atributos
+        atts = new FastVector();
+        atts.addElement(new Attribute("movimentType"));
+        atts.addElement(new Attribute("angle"));
+        atts.addElement(new Attribute("magnitude"));
+        atts.addElement(new Attribute("speed"));
+        atts.addElement(new Attribute("acceleration"));
+        atts.addElement(new Attribute("ldr"));
+        atts.addElement(new Attribute("deltaAx"));
+        atts.addElement(new Attribute("deltaAy"));
+        atts.addElement(new Attribute("deltaAz"));
+        atts.addElement(new Attribute("deltaGx"));
+        atts.addElement(new Attribute("deltaGy"));
+        atts.addElement(new Attribute("deltaGz"));
+        atts.addElement(new Attribute("deltaMx"));
+        atts.addElement(new Attribute("deltaMy"));
+        atts.addElement(new Attribute("deltaMz"));
+
+        FastVector movimentTypeList = new FastVector();
+        movimentTypeList.addElement(FORWARD);
+        movimentTypeList.addElement(U_TURN);
+        movimentTypeList.addElement(RIGHT);
+        movimentTypeList.addElement(LEFT);
+        movimentTypeList.addElement(NON_MOVING);
+        
+        FastVector classificacao = new FastVector();
+        for(String observation : observationsTypes) {
+            classificacao.addElement(observation);
+        }
+        //classificacao.addElement("Deitado");
+        atts.addElement(new Attribute("class", classificacao ));
+
+        // 2. Criar o objeto Instances
+        data = new Instances("CowActivity", atts, 0);
+        
+        
+        // 3. Preencher com dados
+        for(MovementDataStructure mds : listMDSClassification)
+        {
+            vals = new double[data.numAttributes()];
+                     
+            vals[0] = movimentTypeList.indexOf(mds.getMovimentType());
+            vals[1] = mds.getAngle();
+            vals[2] = mds.getMagnitude();
+            vals[3] = mds.getSpeed();
+            vals[4] = mds.getAcceleration();
+            vals[5] = mds.getLdr();
+            vals[6] = mds.getDeltaAx();
+            vals[7] = mds.getDeltaAy();
+            vals[8] = mds.getDeltaAz();
+            vals[9] = mds.getDeltaGx();
+            vals[10] = mds.getDeltaGy();
+            vals[11] = mds.getDeltaGz();
+            vals[12] = mds.getDeltaMx();
+            vals[13] = mds.getDeltaMy();
+            vals[14] = mds.getDeltaMz();
+            vals[15] = classificacao.indexOf(mds.getClassification());
+            
+            // Adicionar atributos no ARFF
+            data.add(new Instance(1.0, vals)); 
+        }
+        
+        data.setClassIndex(data.numAttributes() - 1);
+        
+        return data;
+    }
+    
     
     public LinkedList<CoordinateVenus> getListCoordinate() {
         return listCoordinate;

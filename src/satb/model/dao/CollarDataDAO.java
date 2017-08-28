@@ -225,6 +225,27 @@ public class CollarDataDAO
         if(rs.getString("modeIndicator") != null)
             c.setModeIndicator(rs.getString("modeIndicator").charAt(0));     
         
+        if(rs.getString("ldr") != null)
+            c.setLdr(rs.getDouble("ldr"));        
+        if(rs.getString("ax") != null)
+            c.setAx(rs.getDouble("ax"));        
+        if(rs.getString("ay") != null)
+            c.setAy(rs.getDouble("ay"));        
+        if(rs.getString("az") != null)
+            c.setAz(rs.getDouble("az"));        
+        if(rs.getString("gx") != null)
+            c.setGx(rs.getDouble("gx"));        
+        if(rs.getString("gy") != null)
+            c.setGy(rs.getDouble("gy"));        
+        if(rs.getString("gz") != null)
+            c.setGz(rs.getDouble("gz"));        
+        if(rs.getString("mx") != null)
+            c.setMx(rs.getDouble("mx"));        
+        if(rs.getString("my") != null)
+            c.setMy(rs.getDouble("my"));
+        if(rs.getString("mz") != null)
+            c.setMz(rs.getDouble("mz"));
+        
         return c;
     }
     
@@ -241,8 +262,53 @@ public class CollarDataDAO
             ResultSet rs = stmt.executeQuery("select ap.id, ap.collar, ap.longitude, ap.latitude, ap.coordinate, \"nsIndicator\", \"ewIndicator\", \"utcTime\", \"utcDate\", \"speedGPS\", apv.\"date\", \n" +
                 "\"gpsQuality\", \"satellitesUsed\", \"PDOP\", \"HDOP\", \"VDOP\", altitude, \n" +
                 "\"differencialReferenceStationID\", status, course, \"modeIndicator\"\n" +
+                ", ldr, ax, ay, az, gx, gy, gz, mx, my, mz "+
                 "from animal_position ap\n" +
                 "inner join animal_position_venus apv on apv.id = ap.id order by id");                
+
+            while (rs.next()) 
+            {                
+                listCoordinate.add( populateObjectCoordinateVenus(rs) );
+            }
+        }
+        catch (Exception e) 
+	{
+                e.printStackTrace();
+		System.out.println(e.getMessage());
+	} 
+	finally 
+	{
+		try 
+		{
+			stmt.close();
+			base.closeConnection();
+		} 
+		catch (SQLException e) 
+		{
+			System.out.println("Erro ao desconectar");
+                        e.printStackTrace();
+		}
+	}
+        
+        return listCoordinate;
+    }
+    
+    public LinkedList<CoordinateVenus> selectDataVenusWithLdr () {
+        
+        LinkedList<CoordinateVenus> listCoordinate = new LinkedList<>() ;
+        
+	Statement stmt = null;
+	try 
+	{
+            base = new Database();
+            stmt = base.getConnection().createStatement();
+            
+            ResultSet rs = stmt.executeQuery("select ap.id, ap.collar, ap.longitude, ap.latitude, ap.coordinate, \"nsIndicator\", \"ewIndicator\", \"utcTime\", \"utcDate\", \"speedGPS\", apv.\"date\", \n" +
+                "\"gpsQuality\", \"satellitesUsed\", \"PDOP\", \"HDOP\", \"VDOP\", altitude, \n" +
+                "\"differencialReferenceStationID\", status, course, \"modeIndicator\"\n" +
+                ", ldr, ax, ay, az, gx, gy, gz, mx, my, mz "+
+                "from animal_position ap\n" +
+                "inner join animal_position_venus apv on apv.id = ap.id where ldr is not null order by id");                
 
             while (rs.next()) 
             {                
@@ -284,6 +350,7 @@ public class CollarDataDAO
             ResultSet rs = stmt.executeQuery("select ap.id, ap.collar, ap.longitude, ap.latitude, ap.coordinate, \"nsIndicator\", \"ewIndicator\", \"utcTime\", \"utcDate\", \"speedGPS\", apv.\"date\", \n" +
                 "\"gpsQuality\", \"satellitesUsed\", \"PDOP\", \"HDOP\", \"VDOP\", altitude, \n" +
                 "\"differencialReferenceStationID\", status, course, \"modeIndicator\"\n" +
+                ", ldr, ax, ay, az, gx, gy, gz, mx, my, mz "+
                 "from animal_position ap\n" +
                 "inner join animal_position_venus apv on apv.id = ap.id where ap.collar = '"+collar+"' order by id ");                
 

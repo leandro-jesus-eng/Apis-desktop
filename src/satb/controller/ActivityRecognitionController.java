@@ -13,6 +13,7 @@ import satb.behavior.ActivityDataStructure;
 import satb.behavior.ActivityRecognition;
 import satb.behavior.MovementDataStructure;
 import satb.behavior.Observation;
+import satb.behavior.ObservationTime;
 import satb.behavior.SegmentDataStructure;
 import satb.behavior.WekaTest;
 import satb.model.CoordinateVenus;
@@ -64,6 +65,56 @@ public class ActivityRecognitionController implements Runnable {
         try {
             new ActivityRecognition(listCoordinate, listObservations, degreesForSameDirectionA, degreesForSameDirectionB, 
                     historyLengthA, historyLengthB, minSpeedA, minSpeedB, segmentSecondsA, segmentSecondsB);
+        } catch (Exception ex) {
+            Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void trainClassifierLomba() {
+
+        LinkedList<CoordinateVenus> listCoordinate = collarDataDAO.selectDataVenusWithLdr();
+        LinkedList<Observation> listObservations = collarDataDAO.selectAllObservation();
+        
+        ActivityRecognition arThread = new ActivityRecognition(); 
+        arThread.setListCoordinate(listCoordinate);
+        arThread.setListObservations(listObservations);
+        
+        String configurationPrint = "historyLength \t\t="+arThread.historyLength +"\n";            
+        
+        LinkedList<MovementDataStructure> listMDS = arThread.doMovementAnalyzer();        
+        
+        Integer lastIntersecs = 0;
+        LinkedList<MovementDataStructure> listMDSClassification = new LinkedList<MovementDataStructure>();
+        
+        for(MovementDataStructure mds : listMDS) {
+            
+            Long begin = mds.getCoordinatePoint().getDateObject().getTime();
+            Long end = begin + 1*1000;
+            
+            //String observation = getObservationIntersecs(begin, end);
+            ObservationTime ot = arThread.getObservationIntersecs(begin, end, lastIntersecs);
+            
+            //if(observation != null) {
+            if(ot != null) {
+                
+                // cria lista com os tipos de observações
+                if ( ! arThread.observationsTypes.contains(ot.observation.getObservation()) ) {
+                    arThread.observationsTypes.add(ot.observation.getObservation());
+                }
+                
+                lastIntersecs = ot.lastIntersecs;
+                mds.setClassification(ot.observation.getObservation());
+                
+                listMDSClassification.add(mds);
+            }
+        }
+        
+        WekaTest wt = new WekaTest();
+        Instances data = arThread.createARFFDataFromMDS(listMDSClassification);
+        ActivityRecognition.createARFF(data, ActivityRecognition.filenameARFF );
+        
+        try {
+            wt.go2(data, configurationPrint);
         } catch (Exception ex) {
             Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
         }
