@@ -293,7 +293,7 @@ public class CollarDataDAO
         return listCoordinate;
     }
     
-    public LinkedList<CoordinateVenus> selectDataVenusWithLdr () {
+    public LinkedList<CoordinateVenus> selectDataVenusWithLdr (String collar) {
         
         LinkedList<CoordinateVenus> listCoordinate = new LinkedList<>() ;
         
@@ -303,12 +303,16 @@ public class CollarDataDAO
             base = new Database();
             stmt = base.getConnection().createStatement();
             
+            String collarWhere = "";
+            if(collar != null)
+                collarWhere = " and collar like '"+collar+"' ";
+            
             ResultSet rs = stmt.executeQuery("select ap.id, ap.collar, ap.longitude, ap.latitude, ap.coordinate, \"nsIndicator\", \"ewIndicator\", \"utcTime\", \"utcDate\", \"speedGPS\", apv.\"date\", \n" +
                 "\"gpsQuality\", \"satellitesUsed\", \"PDOP\", \"HDOP\", \"VDOP\", altitude, \n" +
                 "\"differencialReferenceStationID\", status, course, \"modeIndicator\"\n" +
                 ", ldr, ax, ay, az, gx, gy, gz, mx, my, mz "+
                 "from animal_position ap\n" +
-                "inner join animal_position_venus apv on apv.id = ap.id where ldr is not null order by id");                
+                "inner join animal_position_venus apv on apv.id = ap.id where ldr is not null "+collarWhere+" order by id");                
 
             while (rs.next()) 
             {                
@@ -437,7 +441,7 @@ public class CollarDataDAO
             stmt = base.getConnection().createStatement();
             
             ResultSet rs = stmt.executeQuery("SELECT \"time\", observation, collar\n" +
-                "	FROM public.observation where collar = '"+collar+"' order by time;");                
+                "	FROM public.observation where collar like '"+collar+"' order by time;");                
 
             while (rs.next()) 
             {                

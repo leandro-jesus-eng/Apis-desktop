@@ -5,8 +5,8 @@ import javafx.collections.ObservableList;
 import satb.Util;
 import satb.model.Coordinate;
 import weka.core.Attribute;
+import weka.core.DenseInstance;
 import weka.core.FastVector;
-import weka.core.Instance;
 import weka.core.Instances;
 
 /**Classe com métodos para manipulação e criação de Weka.
@@ -57,7 +57,8 @@ public class WekaFunctions
             vals[1] = point.getLatitudeY();
                 
             // Adicionar atributos no ARFF
-            data.add(new Instance(1.0, vals)); 
+            //data.add(new Instance(1.0, vals)); // 3.6            
+            data.add(new DenseInstance(1.0, vals)); // 3.8
         }
        
         System.out.println(data);

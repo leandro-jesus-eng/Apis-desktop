@@ -194,14 +194,14 @@ public class ClusteringController
                
         // Mostramos estatísticas sobre o agrupamento
         Instances clusterCenters = cluster.getClusterCentroids();
-        int[] clusterSizes = cluster.getClusterSizes();
+        double[] clusterSizes = cluster.getClusterSizes();
               
         //Limpando a array de clusters
         clusters.clear();
         
         for(int i=0; i < clusterCenters.numInstances(); i++)
         {
-            Clustering c = new Clustering(i+1, clusterSizes[i], clusterCenters.instance(i).toString());
+            Clustering c = new Clustering(i+1, (int)(clusterSizes[i]), clusterCenters.instance(i).toString());
             clusters.add(c);
         } 
         

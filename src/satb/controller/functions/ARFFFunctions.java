@@ -3,7 +3,6 @@ package satb.controller.functions;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,8 +13,8 @@ import jsat.classifiers.DataPoint;
 import satb.Util;
 import satb.model.Coordinate;
 import weka.core.Attribute;
+import weka.core.DenseInstance;
 import weka.core.FastVector;
-import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
@@ -94,7 +93,8 @@ public class ARFFFunctions
             vals[1] = point.getLatitudeY();
                 
             // Adicionar atributos no ARFF
-            data.add(new Instance(1.0, vals)); 
+            //data.add(new Instance(1.0, vals)); // 3.6
+            data.add(new DenseInstance(1.0, vals)); // 3.8
         }
         
         //Criação e escrita de um arquivo

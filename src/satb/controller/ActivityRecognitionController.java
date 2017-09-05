@@ -5,6 +5,7 @@
  */
 package satb.controller;
 
+import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.logging.Level;
@@ -72,29 +73,88 @@ public class ActivityRecognitionController implements Runnable {
     
     public void trainClassifierLomba() {
 
-        LinkedList<CoordinateVenus> listCoordinate = collarDataDAO.selectDataVenusWithLdr();
-        LinkedList<Observation> listObservations = collarDataDAO.selectAllObservation();
+        // 20170828185377553 22:50 28/08/2017 habilitação cartão
         
         ActivityRecognition arThread = new ActivityRecognition(); 
-        arThread.setListCoordinate(listCoordinate);
-        arThread.setListObservations(listObservations);
         
         String configurationPrint = "historyLength \t\t="+arThread.historyLength +"\n";            
         
+        LinkedList<MovementDataStructure> listMDSClassification = new LinkedList<MovementDataStructure>();
+        
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00A2", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00A3", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00B2", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00B3", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00C3", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00C4", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00D1", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00D2", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00D3", arThread) );
+        listMDSClassification.addAll( createMovementDataStructureCollar ("00D4", arThread) );
+               
+        System.out.println("createARFF: "+Calendar.getInstance().getTime());        
+        WekaTest wt = new WekaTest();
+        Instances data = arThread.createARFFDataFromMDS(listMDSClassification);
+        
+        for(int i=0; i<data.numInstances(); i++) {                        
+            /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("BebendoAgua") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                                
+            } */                      
+            if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Ruminando") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Ruminando");                
+            }
+            /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("EmPe-Ruminando") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
+            }*/
+            if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Parado") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
+            }
+            /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("EmPe-Parado") ) {
+                data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
+            } */                       
+        }
+        
+        // remover angle, 
+        
+        ActivityRecognition.createARFF(data, ActivityRecognition.filenameARFF );
+        
+        try {
+            wt.go2(data, configurationPrint);
+        } catch (Exception ex) {
+            Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public LinkedList<MovementDataStructure> createMovementDataStructureCollar (String collar, ActivityRecognition arThread) {
+        
+        
+        System.out.println("=============  "+collar+" ================");        
+        System.out.println("selectDataVenusWithLdr: "+Calendar.getInstance().getTime());        
+        LinkedList<CoordinateVenus> listCoordinate = collarDataDAO.selectDataVenusWithLdr(collar);
+        
+        System.out.println("selectAllObservation: "+Calendar.getInstance().getTime());
+        LinkedList<Observation> listObservations = collarDataDAO.selectObservation(collar);
+                
+        arThread.setListCoordinate(listCoordinate);
+        arThread.setListObservations(listObservations);
+        
+        System.out.println("doMovementAnalyzer: "+Calendar.getInstance().getTime());
         LinkedList<MovementDataStructure> listMDS = arThread.doMovementAnalyzer();        
         
         Integer lastIntersecs = 0;
         LinkedList<MovementDataStructure> listMDSClassification = new LinkedList<MovementDataStructure>();
         
+        
+        System.out.println("getObservationIntersecs: "+Calendar.getInstance().getTime());
+        System.out.println("listMDS size: "+listMDS.size());
+        
         for(MovementDataStructure mds : listMDS) {
-            
+
             Long begin = mds.getCoordinatePoint().getDateObject().getTime();
             Long end = begin + 1*1000;
             
-            //String observation = getObservationIntersecs(begin, end);
             ObservationTime ot = arThread.getObservationIntersecs(begin, end, lastIntersecs);
             
-            //if(observation != null) {
             if(ot != null) {
                 
                 // cria lista com os tipos de observações
@@ -109,15 +169,7 @@ public class ActivityRecognitionController implements Runnable {
             }
         }
         
-        WekaTest wt = new WekaTest();
-        Instances data = arThread.createARFFDataFromMDS(listMDSClassification);
-        ActivityRecognition.createARFF(data, ActivityRecognition.filenameARFF );
-        
-        try {
-            wt.go2(data, configurationPrint);
-        } catch (Exception ex) {
-            Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        return listMDSClassification;
     }
 
     public void trainClassifierLomba(Integer degreesForSameDirectionA, Integer historyLengthA, Double minSpeedA, Double segmentSecondsA,

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Random;
+import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.NominalPrediction;
@@ -81,7 +82,7 @@ public class WekaTest {
         Instances[] testingSplits  = split[1];
         
         // Choose a set of classifiers
-        Classifier[] models = {     new weka.classifiers.meta.END(),
+        Classifier[] models = {     //new weka.classifiers.meta.END(),
                                     new weka.classifiers.functions.SMO(),
                                     new weka.classifiers.meta.ClassificationViaRegression(),
                                     new weka.classifiers.trees.RandomForest(),
@@ -177,17 +178,20 @@ public class WekaTest {
         filter.setNoReplacement(false);
         data = Filter.useFilter(data, filter);
         
+        
         // Choose a set of classifiers
-        Classifier[] models = {     new weka.classifiers.meta.END(),
+        /*Classifier[] models = {     new weka.classifiers.meta.END(),
                                     new weka.classifiers.functions.SMO(),
                                     new weka.classifiers.meta.ClassificationViaRegression(),
                                     new weka.classifiers.trees.RandomForest(),
                                     new J48(),
                                     new weka.classifiers.functions.MultilayerPerceptron()
-                                    //new weka.classifiers.lazy.KStar()                                                                        
-                                    };
+                                    new weka.classifiers.lazy.KStar()                                                                        
+                                    };*/
         
-        //Classifier[] models = { new weka.classifiers.trees.RandomForest() };
+        Classifier[] models = { new weka.classifiers.trees.RandomForest() };        
+        /*Classifier classifier = AbstractClassifier.forName("weka.classifiers.trees.RandomForest", new String[]{"-I", "10", "-K", "0", "-depth", "0"});
+        Classifier[] models = { classifier };*/
         
         //Classifier[] models = {     new weka.classifiers.functions.SMO() };
         

@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import satb.model.CoordinateVenus;
 import weka.core.Attribute;
+import weka.core.DenseInstance;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -44,7 +45,7 @@ public class ActivityRecognition implements Runnable {
     
     public Integer degreesForSameDirection = 40;
     public Integer historyLength = 9;
-    public Double minSpeed = 0.2;
+    public Double minSpeed = 0.1; // 0.2 padrão
     public Double likelihoodNonmovingUnder = 0.1;
     public Double likelihoodNonmovingOver = 0.6;
     
@@ -271,7 +272,7 @@ public class ActivityRecognition implements Runnable {
                     }
                     
                     if(atual.getAx() != null && anterior.getAx() != null  ) {
-                        mds.setDeltaAx(atual.getAx() - anterior.getAx());
+                        /*mds.setDeltaAx(atual.getAx() - anterior.getAx());
                         mds.setDeltaAy(atual.getAy() - anterior.getAy());
                         mds.setDeltaAz(atual.getAz() - anterior.getAz());
                         mds.setDeltaGx(atual.getGx() - anterior.getGx());
@@ -279,7 +280,17 @@ public class ActivityRecognition implements Runnable {
                         mds.setDeltaGz(atual.getGz() - anterior.getGz());
                         mds.setDeltaMx(atual.getMx() - anterior.getMx());
                         mds.setDeltaMy(atual.getMy() - anterior.getMy());
-                        mds.setDeltaMz(atual.getMz() - anterior.getMz());
+                        mds.setDeltaMz(atual.getMz() - anterior.getMz());*/
+                        
+                        mds.setDeltaAx(Math.abs(atual.getAx() - anterior.getAx()));
+                        mds.setDeltaAy(Math.abs(atual.getAy() - anterior.getAy()));
+                        mds.setDeltaAz(Math.abs(atual.getAz() - anterior.getAz()));
+                        mds.setDeltaGx(Math.abs(atual.getGx() - anterior.getGx()));
+                        mds.setDeltaGy(Math.abs(atual.getGy() - anterior.getGy()));
+                        mds.setDeltaGz(Math.abs(atual.getGz() - anterior.getGz()));
+                        mds.setDeltaMx(Math.abs(atual.getMx() - anterior.getMx()));
+                        mds.setDeltaMy(Math.abs(atual.getMy() - anterior.getMy()));
+                        mds.setDeltaMz(Math.abs(atual.getMz() - anterior.getMz()));
                         
                         mds.setLdr(atual.getLdr());
                     }
@@ -1220,7 +1231,9 @@ public class ActivityRecognition implements Runnable {
             
             
             // Adicionar atributos no ARFF
-            data.add(new Instance(1.0, vals)); 
+            //data.add(new Instance(1.0, vals)); // weka 3.6            
+            data.add(new DenseInstance(1.0, vals)); // weka 3.8
+            
         }
         
         data.setClassIndex(data.numAttributes() - 1);
@@ -1294,7 +1307,8 @@ public class ActivityRecognition implements Runnable {
             vals[15] = classificacao.indexOf(mds.getClassification());
             
             // Adicionar atributos no ARFF
-            data.add(new Instance(1.0, vals)); 
+            // data.add(new Instance(1.0, vals));  // weka 3.6
+            data.add(new DenseInstance(1.0, vals)); // weka 3.8
         }
         
         data.setClassIndex(data.numAttributes() - 1);

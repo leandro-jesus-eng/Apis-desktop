@@ -1040,12 +1040,12 @@ public class KMLFunctions
        //Passo 3: ler os dados da origem e adicionar no Placemark
        int[] assignments = kMeans.getAssignments();
        Instances centroids = kMeans.getClusterCentroids();
-       int[] clusterSizes = kMeans.getClusterSizes();
+       double[] clusterSizes = kMeans.getClusterSizes();
        
        int total = 0; 
        for(int i = 0; i < kMeans.getNumClusters(); i++)
        { 
-           total = total + clusterSizes[i];
+           total = total + (int)clusterSizes[i];
        }
        
        for(int i = 0; i < kMeans.getNumClusters(); i++)
