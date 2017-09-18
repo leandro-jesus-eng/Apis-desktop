@@ -7,6 +7,7 @@ import javafx.event.EventHandler;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import satb.controller.CollarDataController;
 import satb.view.About;
 import satb.view.ActivityRecognitionView;
 import satb.view.AreaShadowView;
@@ -71,6 +72,24 @@ public class ToolBar
                 }               
             }
          });
+         
+         MenuItem menuItem1C = new MenuItem("Importar Dados Meteorológicos ");
+         menuItem1C.setOnAction(new EventHandler<ActionEvent>() 
+         {
+            @Override public void handle(ActionEvent e) 
+            {                
+                try 
+                {
+                     new CollarDataController().readTxtINMET();
+                } 
+                catch (Exception ex) 
+                {
+                     Logger.getLogger(ToolBar.class.getName()).log(Level.SEVERE, null, ex);
+                }               
+            }
+         });
+         
+         
          
  
          //MENU 2
@@ -291,6 +310,7 @@ public class ToolBar
         
          menu1.getItems().add(menuItem1A);
          menu1.getItems().add(menuItem1B);
+         menu1.getItems().add(menuItem1C);
          
          menu2.getItems().add(menuItem2A);
          menu2.getItems().add(menuItem2B);

@@ -5,11 +5,15 @@
         <group>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/behavior/ActivityRecognition.java</file>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/view/ActivityRecognitionView.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/model/MeteorologicalData.java</file>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/controller/ActivityRecognitionController.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/ToolBar.java</file>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/model/dao/CollarDataDAO.java</file>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/model/CoordinateVenus.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/controller/CollarDataController.java</file>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/behavior/MovementDataStructure.java</file>
             <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/behavior/WekaTest.java</file>
+            <file>file:/C:/Users/Leandro/Documents/GitHub/Apis-desktop/src/satb/view/CollarDataView.java</file>
         </group>
     </open-files>
 </project-private>
