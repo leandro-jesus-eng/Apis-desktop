@@ -5,6 +5,8 @@
  */
 package satb.controller;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -18,6 +20,7 @@ import satb.behavior.ObservationTime;
 import satb.behavior.SegmentDataStructure;
 import satb.behavior.WekaTest;
 import satb.model.CoordinateVenus;
+import satb.model.MeteorologicalData;
 import satb.model.dao.CollarDataDAO;
 import weka.core.Instances;
 
@@ -35,6 +38,8 @@ public class ActivityRecognitionController implements Runnable {
     private ActivityRecognition activityRecognition;
     volatile static Integer countActivityRecognitionRunnable = 0;
     static Double maxCorrectAll = 0.0;
+    
+    Hashtable<Long,LinkedList<MeteorologicalData>> hashMeteorologicalData;
 
     public ActivityRecognitionController() {
         collarDataDAO = new CollarDataDAO();
@@ -76,8 +81,11 @@ public class ActivityRecognitionController implements Runnable {
         // 20170828185377553 22:50 28/08/2017 habilitação cartão
         
         ActivityRecognition arThread = new ActivityRecognition(); 
+        arThread.historyLength = 3;
         
         String configurationPrint = "historyLength \t\t="+arThread.historyLength +"\n";            
+        
+        hashMeteorologicalData = collarDataDAO.selectMeteorologicalData();
         
         LinkedList<MovementDataStructure> listMDSClassification = new LinkedList<MovementDataStructure>();
         
@@ -94,28 +102,28 @@ public class ActivityRecognitionController implements Runnable {
                
         System.out.println("createARFF: "+Calendar.getInstance().getTime());        
         WekaTest wt = new WekaTest();
-        Instances data = arThread.createARFFDataFromMDS(listMDSClassification);
+        Instances data = arThread.createARFFDataFromMDS(listMDSClassification, true);
         
-        for(int i=0; i<data.numInstances(); i++) {                        
+        
+        //for(int i=0; i<data.numInstances(); i++) {
             /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("BebendoAgua") ) {
                 data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                                
             } */                      
-            if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Ruminando") ) {
+            /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Ruminando") ) {
                 data.instance(i).setValue(data.classAttribute(), "EmPe-Ruminando");                
-            }
+            }*/
             /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("EmPe-Ruminando") ) {
                 data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
             }*/
-            if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Parado") ) {
+            /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("Deitado-Parado") ) {
                 data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
-            }
+            }*/
             /*if ( data.instance(i).stringValue( data.classAttribute() ).equals("EmPe-Parado") ) {
                 data.instance(i).setValue(data.classAttribute(), "EmPe-Parado");                
             } */                       
-        }
+        //}
         
-        // remover angle, 
-        
+        // remover angle,         
         ActivityRecognition.createARFF(data, ActivityRecognition.filenameARFF );
         
         try {
@@ -128,25 +136,27 @@ public class ActivityRecognitionController implements Runnable {
     public LinkedList<MovementDataStructure> createMovementDataStructureCollar (String collar, ActivityRecognition arThread) {
         
         
-        System.out.println("=============  "+collar+" ================");        
-        System.out.println("selectDataVenusWithLdr: "+Calendar.getInstance().getTime());        
+        //System.out.println("=============  "+collar+" ================");        
+        //System.out.println("selectDataVenusWithLdr: "+Calendar.getInstance().getTime());        
         LinkedList<CoordinateVenus> listCoordinate = collarDataDAO.selectDataVenusWithLdr(collar);
         
-        System.out.println("selectAllObservation: "+Calendar.getInstance().getTime());
+        //System.out.println("selectAllObservation: "+Calendar.getInstance().getTime());
         LinkedList<Observation> listObservations = collarDataDAO.selectObservation(collar);
                 
         arThread.setListCoordinate(listCoordinate);
         arThread.setListObservations(listObservations);
         
-        System.out.println("doMovementAnalyzer: "+Calendar.getInstance().getTime());
+        //System.out.println("doMovementAnalyzer: "+Calendar.getInstance().getTime());
         LinkedList<MovementDataStructure> listMDS = arThread.doMovementAnalyzer();        
         
         Integer lastIntersecs = 0;
         LinkedList<MovementDataStructure> listMDSClassification = new LinkedList<MovementDataStructure>();
         
         
-        System.out.println("getObservationIntersecs: "+Calendar.getInstance().getTime());
-        System.out.println("listMDS size: "+listMDS.size());
+        //System.out.println("getObservationIntersecs: "+Calendar.getInstance().getTime());
+        //System.out.println("listMDS size: "+listMDS.size());
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH");
         
         for(MovementDataStructure mds : listMDS) {
 
@@ -164,6 +174,22 @@ public class ActivityRecognitionController implements Runnable {
                 
                 lastIntersecs = ot.lastIntersecs;
                 mds.setClassification(ot.observation.getObservation());
+                
+                try {
+                    /// busca no banco
+                    //mds.setListMeteorologicalData(collarDataDAO.selectMeteorologicalData(
+                    ///        sdf.parse( sdf.format( mds.getCoordinatePoint().getDateObject() ) )));
+                    
+                    /// busca em memória
+                    mds.setListMeteorologicalData(
+                        hashMeteorologicalData.get( 
+                            sdf.parse( sdf.format( mds.getCoordinatePoint().getDateObject() ) ).getTime() 
+                        )
+                    );
+                    
+                } catch (ParseException ex) {
+                    Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 
                 listMDSClassification.add(mds);
             }

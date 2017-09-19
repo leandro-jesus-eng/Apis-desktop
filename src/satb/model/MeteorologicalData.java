@@ -6,6 +6,7 @@
 package satb.model;
 
 import java.util.Date;
+import java.util.LinkedList;
 
 /**
  *
@@ -46,6 +47,16 @@ public class MeteorologicalData {
         this.label = label;
         this.value = value;
     }
+    
+    public static Float getValue( LinkedList<MeteorologicalData> listMeteorologicalData , String label) {
+        for(MeteorologicalData md : listMeteorologicalData ) {
+            if(md.label.equals(label))
+                return md.getValue();
+        }    
+        //return null;
+        return (float)0;
+    }
+            
 
     public Date getDate() {
         return date;
@@ -62,6 +73,15 @@ public class MeteorologicalData {
     public void setLabel(String label) {
         this.label = label;
     }
+
+    public Float getValue() {
+        return value;
+    }
+
+    public void setValue(Float value) {
+        this.value = value;
+    }
+    
     
     
 

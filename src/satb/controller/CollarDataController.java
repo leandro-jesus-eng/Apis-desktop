@@ -1067,7 +1067,7 @@ public class CollarDataController {
                                 Logger.getLogger(CollarDataController.class.getName()).log(Level.SEVERE, null, ex);
                                 continue;
                             } catch (NumberFormatException ex) {
-                                Logger.getLogger(CollarDataController.class.getName()).log(Level.SEVERE, null, ex);
+                                //Logger.getLogger(CollarDataController.class.getName()).log(Level.SEVERE, null, ex);
                                 continue;
                             }
 
@@ -1075,10 +1075,14 @@ public class CollarDataController {
                         }
                     }
                 } // end while
+                
+                if(listMeteorologicalData.size() > 0) {
+                    collarDataDAO.insertMeteorologicalData(listMeteorologicalData);
+                }
 
             } catch (Exception ex) {
                 Logger.getLogger(CollarDataController.class.getName()).log(Level.SEVERE, null, ex);
-            }            
+            }     
         }
     }
 }

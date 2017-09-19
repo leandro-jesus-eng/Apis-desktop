@@ -4,11 +4,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Random;
-import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.NominalPrediction;
 import weka.classifiers.trees.J48;
+import weka.classifiers.trees.RandomForest;
 import weka.core.FastVector;
 import weka.core.Instances;
 import weka.filters.Filter;
@@ -189,11 +189,15 @@ public class WekaTest {
                                     new weka.classifiers.lazy.KStar()                                                                        
                                     };*/
         
-        Classifier[] models = { new weka.classifiers.trees.RandomForest() };        
-        /*Classifier classifier = AbstractClassifier.forName("weka.classifiers.trees.RandomForest", new String[]{"-I", "10", "-K", "0", "-depth", "0"});
-        Classifier[] models = { classifier };*/
+        //Classifier[] models = { new weka.classifiers.trees.RandomForest() };        
+        //Classifier classifier = AbstractClassifier.forName("weka.classifiers.trees.RandomForest", weka.core.Utils.splitOptions("-P 100 -I 300 -num-slots 3 -K 0 -M 1.0 -V 0.001 -S 1 -batch-size 300"));
+        //classifier.setOptions(weka.core.Utils.splitOptions("-P 100 -I 300 -num-slots 3 -K 0 -M 1.0 -V 0.001 -S 1 -batch-size 300"));
+        RandomForest classifier = new RandomForest();
+        classifier.setBatchSize("300");
+        classifier.setNumIterations(300);                
+        classifier.setNumExecutionSlots(3);
         
-        //Classifier[] models = {     new weka.classifiers.functions.SMO() };
+        Classifier[] models = { classifier };
         
         Double maxCorrect = 0.0;
         // Run for each classifier model

@@ -1,6 +1,8 @@
 package satb.behavior;
 
+import java.util.LinkedList;
 import satb.model.CoordinateVenus;
+import satb.model.MeteorologicalData;
 
 /**
  *
@@ -71,6 +73,8 @@ public class MovementDataStructure {
      */
     protected CoordinateVenus coordinatePoint;
 
+    
+    private LinkedList<MeteorologicalData> listMeteorologicalData = new LinkedList<>();
     
     /*
      * Construtor
@@ -243,4 +247,14 @@ public class MovementDataStructure {
         
         return s; //To change body of generated methods, choose Tools | Templates.
     }
+
+    public LinkedList<MeteorologicalData> getListMeteorologicalData() {
+        return listMeteorologicalData;
+    }
+
+    public void setListMeteorologicalData(LinkedList<MeteorologicalData> listMeteorologicalData) {
+        this.listMeteorologicalData = listMeteorologicalData;
+    }
+    
+    
 }
