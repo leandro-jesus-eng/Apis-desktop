@@ -1305,9 +1305,9 @@ public class ActivityRecognition implements Runnable {
 
             vals[i++] = movimentTypeList.indexOf(mds.getMovimentType());
             vals[i++] = mds.getAngle();
-            vals[i++] = mds.getMagnitude();
-            vals[i++] = mds.getSpeed();
-            vals[i++] = mds.getAcceleration();
+            vals[i++] = mds.getMagnitude()*1000;
+            vals[i++] = mds.getSpeed()*1000;
+            vals[i++] = mds.getAcceleration()*1000;
             vals[i++] = mds.getLdr();
             vals[i++] = mds.getDeltaAx();
             vals[i++] = mds.getDeltaAy();

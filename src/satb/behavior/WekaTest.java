@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Random;
+import weka.attributeSelection.ASEvaluation;
+import weka.attributeSelection.ASSearch;
+import weka.attributeSelection.AttributeSelection;
+import weka.attributeSelection.CfsSubsetEval;
+import weka.attributeSelection.GreedyStepwise;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.NominalPrediction;
@@ -171,6 +176,8 @@ public class WekaTest {
         
         //data.setClassIndex(data.numAttributes() - 1);
         
+        Instances dataFilter;
+        
         Resample filter = new Resample();
         filter.setBiasToUniformClass(1.0);
         filter.setInputFormat(data);
@@ -178,25 +185,29 @@ public class WekaTest {
         filter.setNoReplacement(false);
         data = Filter.useFilter(data, filter);
         
+                
+        /*AttributeSelection as = new AttributeSelection();        
+        GreedyStepwise asSearch = new GreedyStepwise();
+        asSearch.setOptions(new String[]{"-C", "-B", "-R"});
+        as.setSearch(asSearch);        
+        CfsSubsetEval asEval = new CfsSubsetEval();
+        asEval.setOptions(new String[]{"-M", "-L"});
+        as.setEvaluator(asEval);
+        as.SelectAttributes(data);
+        dataFilter = as.reduceDimensionality(data);*/
         
         // Choose a set of classifiers
-        /*Classifier[] models = {     new weka.classifiers.meta.END(),
-                                    new weka.classifiers.functions.SMO(),
-                                    new weka.classifiers.meta.ClassificationViaRegression(),
-                                    new weka.classifiers.trees.RandomForest(),
-                                    new J48(),
-                                    new weka.classifiers.functions.MultilayerPerceptron()
-                                    new weka.classifiers.lazy.KStar()                                                                        
-                                    };*/
-        
-        //Classifier[] models = { new weka.classifiers.trees.RandomForest() };        
+        /*Classifier[] models = {     new weka.classifiers.meta.END(), new weka.classifiers.functions.SMO(), new weka.classifiers.meta.ClassificationViaRegression(),
+                                    new weka.classifiers.trees.RandomForest(), new J48(), new weka.classifiers.functions.MultilayerPerceptron() new weka.classifiers.lazy.KStar()                                                                        
+                                    };*/                
         //Classifier classifier = AbstractClassifier.forName("weka.classifiers.trees.RandomForest", weka.core.Utils.splitOptions("-P 100 -I 300 -num-slots 3 -K 0 -M 1.0 -V 0.001 -S 1 -batch-size 300"));
         //classifier.setOptions(weka.core.Utils.splitOptions("-P 100 -I 300 -num-slots 3 -K 0 -M 1.0 -V 0.001 -S 1 -batch-size 300"));
+        
         RandomForest classifier = new RandomForest();
         classifier.setBatchSize("300");
-        classifier.setNumIterations(300);                
+        classifier.setNumIterations(400);                
         classifier.setNumExecutionSlots(3);
-        
+                        
         Classifier[] models = { classifier };
         
         Double maxCorrect = 0.0;
@@ -212,7 +223,6 @@ public class WekaTest {
             if(eval.correct() > maxCorrect) {                
                 maxCorrect = 100 * eval.correct() / ( eval.correct()+eval.incorrect() );
             }
-            
             String printMessage = "--------------------"+models[j].getClass().getSimpleName()+"---------------------------------"+"\n"+
                     message +"\n"+
                     eval.toSummaryString()+"\n"+
@@ -221,6 +231,20 @@ public class WekaTest {
                     "\nTempo de Execução (segundos) = "+((System.currentTimeMillis()-tempo)/1000.0)+"\n"+
                     "---------------------------------------------------------------------------------------------";                    
             printMessage(printMessage);
+            
+            /*printMessage = "\n ================ Reduce ============= \n";
+            Evaluation eval2 = new Evaluation(dataFilter);            
+            eval2.crossValidateModel(models[j], dataFilter, folds, rand);
+            
+            printMessage += "--------------------"+models[j].getClass().getSimpleName()+"---------------------------------"+"\n"+
+                    message +"\n"+
+                    eval2.toSummaryString()+"\n"+
+                    eval2.toClassDetailsString()+"\n"+
+                    eval2.toMatrixString()+"\n"+
+                    "\nTempo de Execução (segundos) = "+((System.currentTimeMillis()-tempo)/1000.0)+"\n"+
+                    "---------------------------------------------------------------------------------------------";                    
+            printMessage(printMessage);*/
+            
         }
         
         return maxCorrect;

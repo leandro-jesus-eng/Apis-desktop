@@ -102,7 +102,7 @@ public class ActivityRecognitionController implements Runnable {
                
         System.out.println("createARFF: "+Calendar.getInstance().getTime());        
         WekaTest wt = new WekaTest();
-        Instances data = arThread.createARFFDataFromMDS(listMDSClassification, true);
+        Instances data = arThread.createARFFDataFromMDS(listMDSClassification, false);
         
         
         //for(int i=0; i<data.numInstances(); i++) {
