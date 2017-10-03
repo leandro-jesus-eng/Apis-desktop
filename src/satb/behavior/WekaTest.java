@@ -204,7 +204,7 @@ public class WekaTest {
         //classifier.setOptions(weka.core.Utils.splitOptions("-P 100 -I 300 -num-slots 3 -K 0 -M 1.0 -V 0.001 -S 1 -batch-size 300"));
         
         RandomForest classifier = new RandomForest();
-        classifier.setBatchSize("300");
+        classifier.setBatchSize("400");
         classifier.setNumIterations(400);                
         classifier.setNumExecutionSlots(3);
                         
