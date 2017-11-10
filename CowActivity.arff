@@ -16,7 +16,7 @@
 @attribute deltaMy numeric
 @attribute deltaMz numeric
 @attribute hora numeric
-@attribute class {Pastando/Procurando,EmPe-Parado,Andando,BebendoAgua,Deitado-Parado,Deitado-Ruminando,EmPe-Ruminando}
+@attribute class {NaoObservado,Pastando/Procurando,EmPe-Parado,Andando,BebendoAgua,Deitado-Parado,Deitado-Ruminando,EmPe-Ruminando}
 
 @data
 4,0,0,-0,-0,0,4321,300,8198,3785,4229,2426,10,49,410,13,Pastando/Procurando

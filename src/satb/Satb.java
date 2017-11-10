@@ -1,6 +1,8 @@
 package satb;
 
 import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;
@@ -14,6 +16,9 @@ public class Satb extends Application
     @Override
     public void start(Stage primaryStage) throws Exception
     {
+        URLClassLoader sysLoader = (URLClassLoader) getClass().getClassLoader();
+        URL[] urls = sysLoader.getURLs();
+    
          primaryStage.setTitle("SATB - Sistema de Análise de Trajetórias Bovinas");
          GridPane grid = new GridPane();
           

@@ -22,6 +22,7 @@ import satb.behavior.WekaTest;
 import satb.model.CoordinateVenus;
 import satb.model.MeteorologicalData;
 import satb.model.dao.CollarDataDAO;
+import weka.classifiers.Evaluation;
 import weka.core.Instances;
 
 /**
@@ -88,21 +89,32 @@ public class ActivityRecognitionController implements Runnable {
         hashMeteorologicalData = collarDataDAO.selectMeteorologicalData();
         
         LinkedList<MovementDataStructure> listMDSClassification = new LinkedList<MovementDataStructure>();
+        LinkedList<MovementDataStructure> listMDSAll = new LinkedList<MovementDataStructure>();
         
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00A2", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00A3", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00B2", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00B3", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00C3", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00C4", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00D1", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00D2", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00D3", arThread) );
-        listMDSClassification.addAll( createMovementDataStructureCollar ("00D4", arThread) );
-               
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00A2", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00A3", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00B2", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00B3", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00C3", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00C4", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00D1", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00D2", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00D3", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00D4", arThread, listMDSAll) );
+        
+        // adicionar 2017
+        /* listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00D4", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00D4", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00D4", arThread, listMDSAll) );
+        listMDSClassification.addAll( createMovementDataStructureCollarWithObservation ("00D4", arThread, listMDSAll) );
+        */
+        
+        
         System.out.println("createARFF: "+Calendar.getInstance().getTime());        
         WekaTest wt = new WekaTest();
-        Instances data = arThread.createARFFDataFromMDS(listMDSClassification, false);
+        //arThread.observationsTypes.add("NaoObservado");
+        Instances data = arThread.createARFFDataFromMDS(listMDSClassification, false);        
+        Instances dataAll = arThread.createARFFDataFromMDS(listMDSAll, true);
         
         
         //for(int i=0; i<data.numInstances(); i++) {
@@ -124,16 +136,18 @@ public class ActivityRecognitionController implements Runnable {
         //}
         
         // remover angle,         
-        ActivityRecognition.createARFF(data, ActivityRecognition.filenameARFF );
+        //ActivityRecognition.createARFF(data, ActivityRecognition.filenameARFF );
+        //ActivityRecognition.createARFF(dataAll, "tudo_"+ActivityRecognition.filenameARFF );
         
         try {
-            wt.go2(data, configurationPrint);
+            wt.go3(data, configurationPrint, dataAll);
+            
         } catch (Exception ex) {
             Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    public LinkedList<MovementDataStructure> createMovementDataStructureCollar (String collar, ActivityRecognition arThread) {
+    public LinkedList<MovementDataStructure> createMovementDataStructureCollarWithObservation (String collar, ActivityRecognition arThread, LinkedList<MovementDataStructure> listMDSAll) {
         
         
         //System.out.println("=============  "+collar+" ================");        
@@ -147,7 +161,8 @@ public class ActivityRecognitionController implements Runnable {
         arThread.setListObservations(listObservations);
         
         //System.out.println("doMovementAnalyzer: "+Calendar.getInstance().getTime());
-        LinkedList<MovementDataStructure> listMDS = arThread.doMovementAnalyzer();        
+        LinkedList<MovementDataStructure> listMDS = arThread.doMovementAnalyzer();
+        listMDSAll.addAll(listMDS);        
         
         Integer lastIntersecs = 0;
         LinkedList<MovementDataStructure> listMDSClassification = new LinkedList<MovementDataStructure>();
@@ -157,6 +172,11 @@ public class ActivityRecognitionController implements Runnable {
         //System.out.println("listMDS size: "+listMDS.size());
         
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH");
+        
+        // cria lista com os tipos de observações
+        if ( ! arThread.observationsTypes.contains("NaoObservado") ) {
+            arThread.observationsTypes.add("NaoObservado");
+        }
         
         for(MovementDataStructure mds : listMDS) {
 
@@ -175,23 +195,26 @@ public class ActivityRecognitionController implements Runnable {
                 lastIntersecs = ot.lastIntersecs;
                 mds.setClassification(ot.observation.getObservation());
                 
-                try {
-                    /// busca no banco
-                    //mds.setListMeteorologicalData(collarDataDAO.selectMeteorologicalData(
-                    ///        sdf.parse( sdf.format( mds.getCoordinatePoint().getDateObject() ) )));
-                    
-                    /// busca em memória
-                    mds.setListMeteorologicalData(
-                        hashMeteorologicalData.get( 
-                            sdf.parse( sdf.format( mds.getCoordinatePoint().getDateObject() ) ).getTime() 
-                        )
-                    );
-                    
-                } catch (ParseException ex) {
-                    Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                
                 listMDSClassification.add(mds);
+            } else {
+                mds.setClassification("NaoObservado");
+            }
+            
+            try {
+                /// busca no banco
+                //mds.setListMeteorologicalData(collarDataDAO.selectMeteorologicalData(
+                ///        sdf.parse( sdf.format( mds.getCoordinatePoint().getDateObject() ) )));
+
+                /// busca em memória
+                // "NaoObservado" ????
+                mds.setListMeteorologicalData(
+                    hashMeteorologicalData.get( 
+                        sdf.parse( sdf.format( mds.getCoordinatePoint().getDateObject() ) ).getTime() 
+                    )
+                );
+
+            } catch (ParseException ex) {
+                Logger.getLogger(ActivityRecognitionController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         

@@ -3,19 +3,20 @@ package satb.behavior;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Random;
-import weka.attributeSelection.ASEvaluation;
-import weka.attributeSelection.ASSearch;
-import weka.attributeSelection.AttributeSelection;
-import weka.attributeSelection.CfsSubsetEval;
-import weka.attributeSelection.GreedyStepwise;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.NominalPrediction;
+import weka.classifiers.evaluation.Prediction;
+import weka.classifiers.misc.InputMappedClassifier;
 import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
+import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instances;
+import weka.core.Utils;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
 
@@ -248,6 +249,108 @@ public class WekaTest {
         }
         
         return maxCorrect;
+    }
+    
+    public Evaluation go3(Instances data, String message, Instances dataPredict) throws Exception {
+        
+        /*Resample filter = new Resample();
+        filter.setBiasToUniformClass(1.0);
+        filter.setInputFormat(data);
+        filter.setSampleSizePercent(100);
+        filter.setNoReplacement(false);
+        data = Filter.useFilter(data, filter);   */     
+                
+        /*AttributeSelection as = new AttributeSelection();        
+        GreedyStepwise asSearch = new GreedyStepwise();
+        asSearch.setOptions(new String[]{"-C", "-B", "-R"});
+        as.setSearch(asSearch);        
+        CfsSubsetEval asEval = new CfsSubsetEval();
+        asEval.setOptions(new String[]{"-M", "-L"});
+        as.setEvaluator(asEval);
+        as.SelectAttributes(data);
+        data = as.reduceDimensionality(data);*/
+        
+        RandomForest classifier = new RandomForest();
+        classifier.setBatchSize("400");
+        classifier.setNumIterations(400);                
+        classifier.setNumExecutionSlots(3);
+        
+        Long tempo = System.currentTimeMillis();
+        
+        /*Evaluation eval = new Evaluation(data);
+        Random rand = new Random(1);  // using seed = 1
+        eval.crossValidateModel(classifier, data, 10, rand);
+        
+        String printMessage = "--------------------"+classifier.getClass().getSimpleName()+"---------------------------------"+"\n"+
+            message +"\n"+
+            eval.toSummaryString()+"\n"+
+            eval.toClassDetailsString()+"\n"+
+            eval.toMatrixString()+"\n"+
+            "\nTempo de Execução (segundos) = "+((System.currentTimeMillis()-tempo)/1000.0)+"\n"+
+            "---------------------------------------------------------------------------------------------";                    
+        printMessage(printMessage);
+        
+       classifier = new RandomForest();
+        classifier.setBatchSize("400");
+        classifier.setNumIterations(400);                
+        classifier.setNumExecutionSlots(3);*/
+        
+        InputMappedClassifier scheme = new InputMappedClassifier();
+        scheme.setOptions(Utils.splitOptions("-I -trim -W weka.classifiers.trees.RandomForest -- -P 100 -I 400 -num-slots 3 -K 0 -M 1.0 -V 0.001 -S 1 -batch-size 400"));
+        
+        scheme.buildClassifier(data);
+        Evaluation eval = new Evaluation(data);
+        eval.evaluateModel(scheme, dataPredict);
+        String printMessage = "--------------------"+scheme.getClass().getSimpleName()+"---------------------------------"+"\n"+
+            message +"\n"+
+            eval.toSummaryString()+"\n"+
+            eval.toClassDetailsString()+"\n"+
+            eval.toMatrixString()+"\n"+
+            "\nTempo de Execução (segundos) = "+((System.currentTimeMillis()-tempo)/1000.0)+"\n"+
+            "---------------------------------------------------------------------------------------------";                    
+        printMessage(printMessage);
+        
+        ArrayList<Prediction> lpr = eval.predictions();        
+        Double index;
+        int i=0;
+        
+        Enumeration<Attribute> x = dataPredict.enumerateAttributes();        
+        while (x.hasMoreElements()) {
+            System.out.print(x.nextElement().name() +",");            
+        }
+        System.out.println("classe,predito");
+        
+        for(Prediction p : lpr) {
+            
+            System.out.print(dataPredict.get(i).toString() );            
+            //index = p.actual();
+            //System.out.print( "," + dataPredict.classAttribute().value( index.intValue() ) );
+            index = p.predicted();
+            System.out.println("," + dataPredict.classAttribute().value( index.intValue() ) );            
+            
+            i++;
+        }
+        
+        
+            
+            
+        /* for(int i=0; i<dataPredict.size(); i++) {
+            
+            // valor observado
+            Double r = dataPredict.get(i).value(dataPredict.classAttribute());
+            printMessage = dataPredict.classAttribute().value(r.intValue());
+            if(printMessage.equals("NaoObservado"))
+                continue;
+            System.out.print(printMessage);
+            
+            // predito
+            r = eval.evaluateModelOnce(classifier, dataPredict.get(i));
+            printMessage = ";"+ dataPredict.classAttribute().value(r.intValue());            
+            System.out.println(printMessage);
+        }
+        */
+
+        return eval;
     }
     
     private synchronized void printMessage (String message) {

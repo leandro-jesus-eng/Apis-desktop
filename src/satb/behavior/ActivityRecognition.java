@@ -1320,6 +1320,9 @@ public class ActivityRecognition implements Runnable {
             vals[i++] = mds.getDeltaMz();
 
             if (meterologicalData == true) {
+                
+                if(mds.getListMeteorologicalData() == null)
+                    continue;
                 vals[i++] = MeteorologicalData.getValue(mds.getListMeteorologicalData(), MeteorologicalData.TEMPERATURA_DO_AR);
                 vals[i++] = MeteorologicalData.getValue(mds.getListMeteorologicalData(), MeteorologicalData.TEMPERATURA_MAXIMA);
                 vals[i++] = MeteorologicalData.getValue(mds.getListMeteorologicalData(), MeteorologicalData.TEMPERATURA_MINIMA);
@@ -1340,7 +1343,10 @@ public class ActivityRecognition implements Runnable {
             } 
             
             vals[i++] = Float.parseFloat( sdf.format(mds.getCoordinatePoint().getDateObject()) );
-            vals[i++] = classificacao.indexOf(mds.getClassification());
+            /*if(classificacao.isEmpty())
+                vals[i++] = classificacao.indexOf("NaoObservado");
+            else */
+                vals[i++] = classificacao.indexOf(mds.getClassification());
 
             // Adicionar atributos no ARFF
             // data.add(new Instance(1.0, vals));  // weka 3.6
