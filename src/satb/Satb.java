@@ -16,10 +16,10 @@ public class Satb extends Application
     @Override
     public void start(Stage primaryStage) throws Exception
     {
-        URLClassLoader sysLoader = (URLClassLoader) getClass().getClassLoader();
-        URL[] urls = sysLoader.getURLs();
+        //URLClassLoader sysLoader = (URLClassLoader) getClass().getClassLoader();
+        //URL[] urls = sysLoader.getURLs();
     
-         primaryStage.setTitle("SATB - Sistema de Análise de Trajetórias Bovinas");
+         primaryStage.setTitle("SATB - Sistema de An�álise de Trajetórias Bovinas");
          GridPane grid = new GridPane();
           
          //cria a janela e define o tamanho

@@ -253,12 +253,12 @@ public class WekaTest {
     
     public Evaluation go3(Instances data, String message, Instances dataPredict) throws Exception {
         
-        /*Resample filter = new Resample();
+        Resample filter = new Resample();
         filter.setBiasToUniformClass(1.0);
         filter.setInputFormat(data);
         filter.setSampleSizePercent(100);
         filter.setNoReplacement(false);
-        data = Filter.useFilter(data, filter);   */     
+        data = Filter.useFilter(data, filter);     
                 
         /*AttributeSelection as = new AttributeSelection();        
         GreedyStepwise asSearch = new GreedyStepwise();
