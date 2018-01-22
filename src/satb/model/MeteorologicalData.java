@@ -14,17 +14,17 @@ import java.util.LinkedList;
  */
 public class MeteorologicalData {
 
-    public static String TEMPERATURA_DO_AR = "TEMPERATURA DO AR (Â°C)";
-    public static String TEMPERATURA_MAXIMA = "TEMPERATURA MAXIMA (Â°C)";
-    public static String TEMPERATURA_MINIMA = "TEMPERATURA MINIMA (Â°C)";
+    public static String TEMPERATURA_DO_AR = "TEMPERATURA DO AR (°C)";
+    public static String TEMPERATURA_MAXIMA = "TEMPERATURA MAXIMA (°C)";
+    public static String TEMPERATURA_MINIMA = "TEMPERATURA MINIMA (°C)";
 
     public static String UMIDADE_RELATIVA_DO_AR = "UMIDADE RELATIVA DO AR (%)";
     public static String UMIDADE_RELATIVA_DO_AR_MAXIMA = "UMIDADE RELATIVA DO AR MAXIMA (%)";
     public static String UMIDADE_RELATIVA_DO_AR_MINIMA = "UMIDADE RELATIVA DO AR MINIMA (%)";
 
-    public static String TEMPERATURA_DO_PONTO_DE_ORVALHO = "TEMPERATURA DO PONTO DE ORVALHO (Â°C)";
-    public static String TEMPERATURA_DO_PONTO_DE_ORVALHO_MAXIMA = "TEMPERATURA DO PONTO DE ORVALHO MAXIMA (Â°C)";
-    public static String TEMPERATURA_DO_PONTO_DE_ORVALHO_MINIMA = "TEMPERATURA DO PONTO DE ORVALHO MINIMA (Â°C)";
+    public static String TEMPERATURA_DO_PONTO_DE_ORVALHO = "TEMPERATURA DO PONTO DE ORVALHO (°C)";
+    public static String TEMPERATURA_DO_PONTO_DE_ORVALHO_MAXIMA = "TEMPERATURA DO PONTO DE ORVALHO MAXIMA (°C)";
+    public static String TEMPERATURA_DO_PONTO_DE_ORVALHO_MINIMA = "TEMPERATURA DO PONTO DE ORVALHO MINIMA (°C)";
 
     public static String PRESSAO_ATMOSFERICA = "PRESSAO ATMOSFERICA (hPa)";
     public static String PRESSAO_ATMOSFERICA_MAXIMA = "PRESSAO ATMOSFERICA MAXIMA (hPa)";
@@ -34,7 +34,7 @@ public class MeteorologicalData {
     public static String VENTO_DIRECAO = "VENTO DIRECAO (graus)";
     public static String VENTO_RAJADA_MAXIMA = "VENTO RAJADA MAXIMA (m/s)";
 
-    public static String RADIACAO_GLOBAL = "RADIACAO GLOBAL (KJ/MÂ²)";
+    public static String RADIACAO_GLOBAL = "RADIACAO GLOBAL (KJ/M²)";
 
     public static String PRECIPITACAO = "PRECIPITACAO (mm)";
 
